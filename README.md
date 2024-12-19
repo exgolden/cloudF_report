@@ -38,10 +38,11 @@ Obtain a report with general analytics of CloudFlare
 
 - Security:
 
-  - Encrypted requests
-  - Encrypted requests rate
-  - Encrypted bandwidth
-  - Encrypted bandwidth rate
+  - Encrypted requests: get_encrypted_requests: Get the total amount of encrypted requests for the period.
+  - Encrypted requests rate: \*\* I believe this is just encryptes_requests/total_requests
+  - Encrypted bandwidth: get_encrypted_bandwidth: Get the total amount of encrypted bandwidth for the period.
+  - Encrypted bandwidth rate: ** I believe this is just
+    encypted_bandwidth/total_bandiwdth **
 
 - Stats:
 
