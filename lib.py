@@ -37,12 +37,13 @@ def geq_generator(start_date: str, periods: int):
         ) from e
 
 
+# %% Network module
 # 4xx or 5xx errors
 def get_error_totals(
     token: str, account_tag: str, error_type: int, leq_date: str, periods: int
 ):
     """
-    Get the total amount of 4xx errors for the period.
+    Get the total amount of 4xx or 5xx errors for the period.
     Args:
         token (str): API Token to make requests.
         account_tag (str): Unique identifier for the Cloudflare account.
@@ -112,7 +113,625 @@ def get_error_totals(
         print(f"HTTP Error {response.status_code}: {response.text}")
 
 
-get_error_totals(TOKEN, ID, 4, "2024-12-16T22:58:00Z", 7)
+# %% Stats module
+# Requests per country
+def get_requests_per_location(
+    token: str, account_tag: str, limit: int, leq_date: str, periods: int
+):
+    """
+    Get the total number of request per country for the period
+    Args:
+        token (str): API Token to make requests.
+        account_tag (str): Unique identifier for the Cloudflare account.
+        limit (int): Maximum number of entries to return.
+        leq_date (str): Less or equal date for the range (ISO 8601 format).
+
+    """
+    # Date generation
+    geq_date = geq_generator(leq_date, periods)
+    # Query construction
+    url = "https://api.cloudflare.com/client/v4/graphql"
+    headers = {
+        "Authorization": f"Bearer {token}",
+        "Content-Type": "application/json",
+        "Accept": "application/json",
+    }
+    query = """
+        query GetRequestsLocations {
+            viewer {
+                accounts(filter: {accountTag: $accountTag}) {
+                    locationTotals: httpRequestsOverviewAdaptiveGroups(filter:
+                    $filter, limit: $limit, orderBy: [sum_requests_DESC]) {
+                        sum {
+                            requests
+                            __typename
+                        }
+                        dimensions {
+                          clientCountryName
+                          __typename
+                        }
+                        __typename
+                    }
+                    __typename
+                }
+                __typename
+            }
+        }
+    """
+    variables = {
+        "accountTag": account_tag,
+        "limit": limit,
+        "filter": {
+            "datetime_geq": geq_date,
+            "datetime_leq": leq_date,
+        },
+    }
+    payload = {"query": query, "variables": variables}
+    response = requests.post(url, headers=headers, json=payload)
+    if response.status_code == 200:
+        data = response.json()
+        if data.get("data"):
+            print(json.dumps(data, indent=2))
+        else:
+            print(f"Error: {data.get('errors', 'Unknown error')}")
+    else:
+        print(f"HTTP Error {response.status_code}: {response.text}")
 
 
-# end_date("2024-12-16T22:58:00Z", 7)
+# Total bandwidth
+def get_bandwidth(
+    token: str, account_tag: str, limit: int, leq_date: str, periods: int
+):
+    """
+    Get the total bandwidth for the period
+    Args:
+        token (str): API Token to make requests.
+        account_tag (str): Unique identifier for the Cloudflare account.
+        limit (int): Maximum number of entries to return.
+        leq_date (str): Less or equal date for the range (ISO 8601 format).
+
+    """
+    geq_date = geq_generator(leq_date, periods)
+    # Query construction
+    url = "https://api.cloudflare.com/client/v4/graphql"
+    headers = {
+        "Authorization": f"Bearer {token}",
+        "Content-Type": "application/json",
+        "Accept": "application/json",
+    }
+    query = """
+        query GetBandwidth {
+            viewer {
+                accounts(filter: {accountTag: $accountTag}) {
+                    bandwidthTotals: httpRequestsOverviewAdaptiveGroups(filter: $filter, limit: $limit) {
+                        sum {
+                            bytes
+                        }
+                    }
+                }
+            }
+        }
+    """
+    variables = {
+        "accountTag": account_tag,
+        "limit": limit,
+        "filter": {
+            "datetime_geq": geq_date,
+            "datetime_leq": leq_date,
+        },
+    }
+    payload = {"query": query, "variables": variables}
+    response = requests.post(url, headers=headers, json=payload)
+    if response.status_code == 200:
+        data = response.json()
+        if data.get("data"):
+            print(json.dumps(data, indent=2))
+        else:
+            print(f"Error: {data.get('errors', 'Unknown error')}")
+    else:
+        print(f"HTTP Error {response.status_code}: {response.text}")
+
+
+# Total requests
+def get_requests(token: str, account_tag: str, limit: int, leq_date: str, periods: int):
+    """
+    Get the total number of request for the period
+    Args:
+        token (str): API Token to make requests.
+        account_tag (str): Unique identifier for the Cloudflare account.
+        limit (int): Maximum number of entries to return.
+        leq_date (str): Less or equal date for the range (ISO 8601 format).
+
+    """
+    # Date generation
+    geq_date = geq_generator(leq_date, periods)
+    # Query construction
+    url = "https://api.cloudflare.com/client/v4/graphql"
+    headers = {
+        "Authorization": f"Bearer {token}",
+        "Content-Type": "application/json",
+        "Accept": "application/json",
+    }
+    query = """
+        query GetRequests {
+            viewer {
+                accounts(filter: {accountTag: $accountTag}) {
+                    requestsTotals: httpRequestsOverviewAdaptiveGroups(filter: $filter, limit: $limit) {
+                        sum {
+                            requests
+                        }
+                    }
+                }
+            }
+        }
+    """
+    variables = {
+        "accountTag": account_tag,
+        "limit": limit,
+        "filter": {
+            "datetime_geq": geq_date,
+            "datetime_leq": leq_date,
+        },
+    }
+    payload = {"query": query, "variables": variables}
+    response = requests.post(url, headers=headers, json=payload)
+    if response.status_code == 200:
+        data = response.json()
+        if data.get("data"):
+            print(json.dumps(data, indent=2))
+        else:
+            print(f"Error: {data.get('errors', 'Unknown error')}")
+    else:
+        print(f"HTTP Error {response.status_code}: {response.text}")
+
+
+# Bandwidth per country
+def get_bandwidth_per_location(
+    token: str, account_tag: str, limit: int, leq_date: str, periods: int
+):
+    """
+    Get the total bandwidth per country for the period
+    Args:
+        token (str): API Token to make requests.
+        account_tag (str): Unique identifier for the Cloudflare account.
+        limit (int): Maximum number of entries to return.
+        leq_date (str): Less or equal date for the range (ISO 8601 format).
+
+    """
+    geq_date = geq_generator(leq_date, periods)
+    # Query construction
+    url = "https://api.cloudflare.com/client/v4/graphql"
+    headers = {
+        "Authorization": f"Bearer {token}",
+        "Content-Type": "application/json",
+        "Accept": "application/json",
+    }
+    query = """
+        query GetRequestsLocations {
+            viewer {
+                accounts(filter: {accountTag: $accountTag}) {
+                    locationTotals: httpRequestsOverviewAdaptiveGroups(filter:
+                    $filter, limit: $limit, orderBy: [sum_requests_DESC]) {
+                        sum {
+                            bytes
+                            __typename
+                        }
+                        dimensions {
+                          clientCountryName
+                          __typename
+                        }
+                        __typename
+                    }
+                    __typename
+                }
+                __typename
+            }
+        }
+    """
+    variables = {
+        "accountTag": account_tag,
+        "limit": limit,
+        "filter": {
+            "datetime_geq": geq_date,
+            "datetime_leq": leq_date,
+        },
+    }
+    payload = {"query": query, "variables": variables}
+    response = requests.post(url, headers=headers, json=payload)
+    if response.status_code == 200:
+        data = response.json()
+        if data.get("data"):
+            print(json.dumps(data, indent=2))
+        else:
+            print(f"Error: {data.get('errors', 'Unknown error')}")
+    else:
+        print(f"HTTP Error {response.status_code}: {response.text}")
+
+
+def get_visits_total(
+    token: str, account_tag: str, limit: int, leq_date: str, periods: int
+):
+    """
+    Get the total number of visits for the period.
+    Args:
+        token (str): API Token to make requests.
+        account_tag (str): Unique identifier for the Cloudflare account.
+        limit (int): Maximum number of entries to return.
+        leq_date (str): Less or equal date for the range (ISO 8601 format).
+    """
+    geq_date = geq_generator(leq_date, periods)
+    # Query construction
+    url = "https://api.cloudflare.com/client/v4/graphql"
+    headers = {
+        "Authorization": f"Bearer {token}",
+        "Content-Type": "application/json",
+        "Accept": "application/json",
+    }
+    query = """
+        query GetVisits ($accountTag: String, $filter: Filter, $limit: Int) {
+            viewer {
+                accounts(filter: {accountTag: $accountTag}) {
+                    statsOverTime: httpRequestsOverviewAdaptiveGroups(filter: $filter, limit: $limit) {
+                        sum {
+                            visits
+                        }
+                        dimensions {
+                            timestamp: date
+                        }
+                    }
+                }
+            }
+        }
+    """
+    variables = {
+        "accountTag": account_tag,
+        "limit": limit,
+        "filter": {
+            "datetime_geq": geq_date,
+            "datetime_leq": leq_date,
+        },
+    }
+    payload = {"query": query, "variables": variables}
+    response = requests.post(url, headers=headers, json=payload)
+    if response.status_code == 200:
+        data = response.json()
+        if data.get("data"):
+            print(json.dumps(data, indent=2))
+        else:
+            print(f"Error: {data.get('errors', 'Unknown error')}")
+    else:
+        print(f"HTTP Error {response.status_code}: {response.text}")
+
+
+def get_page_views_total(
+    token: str, account_tag: str, limit: int, leq_date: str, periods: int
+):
+    """
+    Get the total number of page views for the period.
+    Args:
+        token (str): API Token to make requests.
+        account_tag (str): Unique identifier for the Cloudflare account.
+        limit (int): Maximum number of entries to return.
+        leq_date (str): Less or equal date for the range (ISO 8601 format).
+    """
+    # Date generation
+    geq_date = geq_generator(leq_date, periods)
+    # Query construction
+    url = "https://api.cloudflare.com/client/v4/graphql"
+    headers = {
+        "Authorization": f"Bearer {token}",
+        "Content-Type": "application/json",
+        "Accept": "application/json",
+    }
+    query = """
+        query GetPageViews($accountTag: String, $filter: Filter, $limit: Int) {
+            viewer {
+                accounts(filter: {accountTag: $accountTag}) {
+                    statsOverTime: httpRequestsOverviewAdaptiveGroups(filter: $filter, limit: $limit) {
+                        sum {
+                            pageViews
+                        }
+                        dimensions {
+                            timestamp: date
+                        }
+                    }
+                }
+            }
+        }
+    """
+    variables = {
+        "accountTag": account_tag,
+        "limit": limit,
+        "filter": {
+            "datetime_geq": geq_date,
+            "datetime_leq": leq_date,
+        },
+    }
+    payload = {"query": query, "variables": variables}
+    response = requests.post(url, headers=headers, json=payload)
+    if response.status_code == 200:
+        data = response.json()
+        if data.get("data"):
+            print(json.dumps(data, indent=2))
+        else:
+            print(f"Error: {data.get('errors', 'Unknown error')}")
+    else:
+        print(f"HTTP Error {response.status_code}: {response.text}")
+
+
+# %% Network module
+# Client http version
+def get_http_versions(
+    token: str, account_tag: str, limit: int, leq_date: str, periods: int
+):
+    """
+    Get the http client version used.
+    Args:
+        token (str): API Token to make requests.
+        account_tag (str): Unique identifier for the Cloudflare account.
+        limit (int): Maximum number of entries to return.
+        leq_date (str): Less or equal date for the range (ISO 8601 format).
+    """
+    # Date generation
+    geq_date = geq_generator(leq_date, periods)
+    # Query construction
+    url = "https://api.cloudflare.com/client/v4/graphql"
+    headers = {
+        "Authorization": f"Bearer {token}",
+        "Content-Type": "application/json",
+        "Accept": "application/json",
+    }
+    query = """
+        query GetHttpProtocols {
+            viewer {
+                accounts(filter: {accountTag: $accountTag}) {
+                    total: httpRequestsOverviewAdaptiveGroups(filter: $filter, limit: 1) {
+                        sum {
+                            requests
+                            __typename
+                        }
+                        __typename
+                    }
+                    httpProtocols: httpRequestsOverviewAdaptiveGroups(filter: $filter, limit: 5, orderBy: [sum_requests_DESC]) {
+                        sum {
+                            requests
+                            __typename
+                        }
+                        dimensions {
+                            metric: clientRequestHTTPProtocol
+                            __typename
+                        }
+                        __typename
+                    }
+                    __typename
+                }
+                __typename
+            }
+        }
+    """
+    variables = {
+        "accountTag": account_tag,
+        "limit": limit,
+        "filter": {
+            "datetime_geq": geq_date,
+            "datetime_leq": leq_date,
+        },
+    }
+    payload = {"query": query, "variables": variables}
+    response = requests.post(url, headers=headers, json=payload)
+    if response.status_code == 200:
+        data = response.json()
+        if data.get("data"):
+            print(json.dumps(data, indent=2))
+        else:
+            print(f"Error: {data.get('errors', 'Unknown error')}")
+    else:
+        print(f"HTTP Error {response.status_code}: {response.text}")
+
+
+# SSL Traffic
+def get_ssl_traffic(
+    token: str, account_tag: str, limit: int, leq_date: str, periods: int
+):
+    """
+    Get the traffic served over SSL.
+    Args:
+        token (str): API Token to make requests.
+        account_tag (str): Unique identifier for the Cloudflare account.
+        limit (int): Maximum number of entries to return.
+        leq_date (str): Less or equal date for the range (ISO 8601 format).
+    """
+    # Date generation
+    geq_date = geq_generator(leq_date, periods)
+    # Query construction
+    url = "https://api.cloudflare.com/client/v4/graphql"
+    headers = {
+        "Authorization": f"Bearer {token}",
+        "Content-Type": "application/json",
+        "Accept": "application/json",
+    }
+    query = """
+        query SSLVersionsQuery {
+            viewer {
+                accounts(filter: {accountTag: $accountTag}) {
+                    total: httpRequestsOverviewAdaptiveGroups(filter: $filter, limit: 1) {
+                        sum {
+                            requests
+                            __typename
+                        }
+                        __typename
+                    }
+                    sslVersions: httpRequestsOverviewAdaptiveGroups(filter: $filter, limit: 5) {
+                        sum {
+                            requests
+                            __typename
+                        }
+                        dimensions {
+                            metric: clientSSLProtocol
+                            __typename
+                        }
+                        __typename
+                    }
+                    __typename
+                }
+                __typename
+            }
+        }
+    """
+    variables = {
+        "accountTag": account_tag,
+        "limit": limit,
+        "filter": {
+            "datetime_geq": geq_date,
+            "datetime_leq": leq_date,
+        },
+    }
+    payload = {"query": query, "variables": variables}
+    response = requests.post(url, headers=headers, json=payload)
+    if response.status_code == 200:
+        data = response.json()
+        if data.get("data"):
+            print(json.dumps(data, indent=2))
+        else:
+            print(f"Error: {data.get('errors', 'Unknown error')}")
+    else:
+        print(f"HTTP Error {response.status_code}: {response.text}")
+
+
+# Top content types
+def get_content_type(
+    token: str, account_tag: str, limit: int, leq_date: str, periods: int
+):
+    """
+    Get the top type of content served for the period
+    Args:
+        token (str): API Token to make requests.
+        account_tag (str): Unique identifier for the Cloudflare account.
+        limit (int): Maximum number of entries to return.
+        leq_date (str): Less or equal date for the range (ISO 8601 format).
+    """
+    # TODO: Chech why are there two limits in this function
+    # Date generation
+    geq_date = geq_generator(leq_date, periods)
+    # Query construction
+    url = "https://api.cloudflare.com/client/v4/graphql"
+    headers = {
+        "Authorization": f"Bearer {token}",
+        "Content-Type": "application/json",
+        "Accept": "application/json",
+    }
+    query = """
+        query GetTopContentTypes {
+            viewer {
+                accounts(filter: {accountTag: $accountTag}) {
+                    total: httpRequestsOverviewAdaptiveGroups(filter: $filter, limit: 1) {
+                        sum {
+                            requests
+                            __typename
+                        }
+                       __typename
+                    }
+                    contentTypes: httpRequestsOverviewAdaptiveGroups(filter: $filter, limit: 5, orderBy: [sum_requests_DESC]) {
+                        sum {
+                            requests
+                            __typename
+                        }
+                        dimensions {
+                            metric: edgeResponseContentTypeName
+                            __typename
+                        }
+                        __typename
+                    }
+                    __typename
+                }
+                __typename
+            }
+        }
+    """
+    variables = {
+        "accountTag": account_tag,
+        "limit": limit,
+        "filter": {
+            "datetime_geq": geq_date,
+            "datetime_leq": leq_date,
+        },
+    }
+    payload = {"query": query, "variables": variables}
+    response = requests.post(url, headers=headers, json=payload)
+    if response.status_code == 200:
+        data = response.json()
+        if data.get("data"):
+            print(json.dumps(data, indent=2))
+        else:
+            print(f"Error: {data.get('errors', 'Unknown error')}")
+    else:
+        print(f"HTTP Error {response.status_code}: {response.text}")
+
+
+# %% Cache module
+# Cached requests
+def get_cached_requests(
+    token: str, account_tag: str, limit: int, leq_date: str, periods: int
+):
+    """
+    Get the total of cached requests for the period.
+    Args:
+        token (str): API Token to make requests.
+        account_tag (str): Unique identifier for the Cloudflare account.
+        limit (int): Maximum number of entries to return.
+        leq_date (str): Less or equal date for the range (ISO 8601 format).
+    """
+    # Date generation
+    geq_date = geq_generator(leq_date, periods)
+    # Query construction
+    url = "https://api.cloudflare.com/client/v4/graphql"
+    headers = {
+        "Authorization": f"Bearer {token}",
+        "Content-Type": "application/json",
+        "Accept": "application/json",
+    }
+    query = """
+        query GetCachedRequests($accountTag: String, $filter: Filter) {
+            viewer {
+                accounts(filter: {accountTag: $accountTag}) {
+                    cachedRequestsOverTime: httpRequestsOverviewAdaptiveGroups(filter: $filter, limit: 2000) {
+                        sum {
+                            cachedRequests
+                        }
+                        dimensions {
+                            timestamp: date
+                        }
+                    }
+                }
+            }
+        }
+    """
+    variables = {
+        "accountTag": account_tag,
+        "limit": limit,
+        "filter": {
+            "datetime_geq": geq_date,
+            "datetime_leq": leq_date,
+        },
+    }
+    payload = {"query": query, "variables": variables}
+    response = requests.post(url, headers=headers, json=payload)
+    if response.status_code == 200:
+        data = response.json()
+        if data.get("data"):
+            print(json.dumps(data, indent=2))
+        else:
+            print(f"Error: {data.get('errors', 'Unknown error')}")
+    else:
+        print(f"HTTP Error {response.status_code}: {response.text}")
+
+
+get_cached_requests(TOKEN, ID, 10, "2024-12-16T22:58:00Z", 7)
+# get_content_type(TOKEN, ID, 10, "2024-12-16T22:58:00Z", 7)
+# get_http_versions(TOKEN, ID, 10, "2024-12-16T22:58:00Z", 7)
+# get_bandwidth(TOKEN, ID, 10, "2024-12-16T22:58:00Z", 7)
+# get_page_views_total(TOKEN, ID, 10, "2024-12-16T22:58:00Z", 7)
+# get_bandwidth_per_location(TOKEN, ID, 10, "2024-12-16T22:58:00Z", 7)
+# get_requests_per_location(TOKEN, ID, 10, "2024-12-16T22:58:00Z", 7)
+# get_error_totals(TOKEN, ID, 4, "2024-12-16T22:58:00Z", 7)
+#
