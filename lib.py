@@ -726,7 +726,68 @@ def get_cached_requests(
         print(f"HTTP Error {response.status_code}: {response.text}")
 
 
-get_cached_requests(TOKEN, ID, 10, "2024-12-16T22:58:00Z", 7)
+# Cached bandwidth
+def get_cached_bandwidth(
+    token: str, account_tag: str, limit: int, leq_date: str, periods: int
+):
+    """
+    Get the total amount of cached badwidth for the period.
+    Args:
+        token (str): API Token to make requests.
+        account_tag (str): Unique identifier for the Cloudflare account.
+        limit (int): Maximum number of entries to return.
+        leq_date (str): Less or equal date for the range (ISO 8601 format).
+    """
+    # Date generation
+    geq_date = geq_generator(leq_date, periods)
+    # Query construction
+    url = "https://api.cloudflare.com/client/v4/graphql"
+    headers = {
+        "Authorization": f"Bearer {token}",
+        "Content-Type": "application/json",
+        "Accept": "application/json",
+    }
+    query = """
+        query GetCachedBandwidth($accountTag: String, $filter: Filter) {
+            viewer {
+                accounts(filter: {accountTag: $accountTag}) {
+                    cachedBandwidthOverTime: httpRequestsOverviewAdaptiveGroups(
+                    filter: $filter, 
+                    limit: 2000
+                    ) {
+                        sum {
+                          cachedBytes
+                        }
+                        dimensions {
+                            timestamp: date
+                        }
+                    }
+                }
+            }
+        }
+    """
+    variables = {
+        "accountTag": account_tag,
+        "limit": limit,
+        "filter": {
+            "datetime_geq": geq_date,
+            "datetime_leq": leq_date,
+        },
+    }
+    payload = {"query": query, "variables": variables}
+    response = requests.post(url, headers=headers, json=payload)
+    if response.status_code == 200:
+        data = response.json()
+        if data.get("data"):
+            print(json.dumps(data, indent=2))
+        else:
+            print(f"Error: {data.get('errors', 'Unknown error')}")
+    else:
+        print(f"HTTP Error {response.status_code}: {response.text}")
+
+
+get_cached_bandwidth(TOKEN, ID, 10, "2024-12-16T22:58:00Z", 7)
+# get_cached_requests(TOKEN, ID, 10, "2024-12-16T22:58:00Z", 7)
 # get_content_type(TOKEN, ID, 10, "2024-12-16T22:58:00Z", 7)
 # get_http_versions(TOKEN, ID, 10, "2024-12-16T22:58:00Z", 7)
 # get_bandwidth(TOKEN, ID, 10, "2024-12-16T22:58:00Z", 7)

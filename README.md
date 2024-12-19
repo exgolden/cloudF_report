@@ -31,9 +31,10 @@ Obtain a report with general analytics of CloudFlare
 - Cache:
 
   - Cached requests: get_cached_requests: Get the total of cached requests for the period.
-  - Cached request rate
-  - Cached bandwidth
-  - Cached bandwidth rate
+  - Cached request rate: ** I believe this is just cached_requests/total_requests **
+  - Cached bandwidth: get_cached_bandwidth: Get the total amount of cached badwidth for the period.
+  - Cached bandwidth rate: ** I believe this is just
+    cached_badnwidth/total_bandiwdth **
 
 - Security:
 
