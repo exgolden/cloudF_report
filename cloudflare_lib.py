@@ -4,6 +4,7 @@ Store all the functions neccesary to run the Cloudflare API
 
 import json
 import os
+import re
 from datetime import datetime, timedelta
 
 # Temporary imports and code
@@ -27,6 +28,8 @@ def geq_generator(start_date: str, periods: int):
     Returns:
         str: Greater or equal date for the range (ISO 8601 format).
     """
+    # Modify the date to bring the days starting from start to end
+    periods -= 1
     try:
         start = datetime.strptime(start_date, "%Y-%m-%dT%H:%M:%SZ")
         end = start - timedelta(days=periods)
@@ -51,6 +54,8 @@ def get_error_totals(
         only admits 4 or 5 as values.
         leq_date (str): Less or equal date for the range (ISO 8601 format).
     """
+    # TODO: Change the name of the query
+    # TODO: The data is not ordered.
     # Date generation
     geq_date = geq_generator(leq_date, periods)
     # Error type confirmation
@@ -73,11 +78,14 @@ def get_error_totals(
     }
     query = """
         query GetErrorTotals($accountTag: String, $filter: Filter,
-        $fourxxFilter: Filter) {
+        $errorFilter: Filter) {
             viewer {
                 accounts(filter: {accountTag: $accountTag}) {
-                    fourxxOverTime: httpRequestsOverviewAdaptiveGroups(filter:
-                    {AND: [$filter, $fourxxFilter,]}, limit: 2000) {
+                    errorStats: httpRequestsOverviewAdaptiveGroups(filter:
+                    {AND: [$filter, $errorFilter,]},
+                        limit: 2000
+                        # orderBy: date, orderDirection:desc
+                        ) {
                         sum {
                             requests
                         }
@@ -95,7 +103,7 @@ def get_error_totals(
             "datetime_geq": geq_date,
             "datetime_leq": leq_date,
         },
-        "fourxxFilter": {
+        "errorFilter": {
             "edgeResponseStatus_geq": inf_limit,
             "edgeResponseStatus_lt": sup_limit,
         },
@@ -106,9 +114,13 @@ def get_error_totals(
     if response.status_code == 200:
         data = response.json()
         if data.get("data"):
-            print(json.dumps(data, indent=2))
-        else:
-            print(f"Error: {data.get('errors', 'Unknown error')}")
+            pre_results = data["data"]["viewer"]["accounts"][0]["errorStats"]
+            results = {
+                item["dimensions"]["timestamp"]: item["sum"]["requests"]
+                for item in pre_results
+            }
+            print(results)
+        print(f"Error: {data.get('errors', 'Unknown error')}")
     else:
         print(f"HTTP Error {response.status_code}: {response.text}")
 
@@ -116,7 +128,7 @@ def get_error_totals(
 # %% Stats module
 # Requests per country
 def get_requests_per_location(
-    token: str, account_tag: str, limit: int, leq_date: str, periods: int
+    token: str, account_tag: str, leq_date: str, periods: int
 ):
     """
     Get the total number of request per country for the period
@@ -141,7 +153,7 @@ def get_requests_per_location(
             viewer {
                 accounts(filter: {accountTag: $accountTag}) {
                     locationTotals: httpRequestsOverviewAdaptiveGroups(filter:
-                    $filter, limit: $limit, orderBy: [sum_requests_DESC]) {
+                    $filter, limit: 10, orderBy: [sum_requests_DESC]) {
                         sum {
                             requests
                             __typename
@@ -160,7 +172,6 @@ def get_requests_per_location(
     """
     variables = {
         "accountTag": account_tag,
-        "limit": limit,
         "filter": {
             "datetime_geq": geq_date,
             "datetime_leq": leq_date,
@@ -171,7 +182,12 @@ def get_requests_per_location(
     if response.status_code == 200:
         data = response.json()
         if data.get("data"):
-            print(json.dumps(data, indent=2))
+            pre_results = data["data"]["viewer"]["accounts"][0]["locationTotals"]
+            results = {
+                item["dimensions"]["clientCountryName"]: item["sum"]["requests"]
+                for item in pre_results
+            }
+            print(results)
         else:
             print(f"Error: {data.get('errors', 'Unknown error')}")
     else:
@@ -200,12 +216,18 @@ def get_bandwidth(
         "Accept": "application/json",
     }
     query = """
-        query GetBandwidth {
+        query GetBandwidthPerDay($accountTag: String, $filter: Filter, $limit: Int) {
             viewer {
                 accounts(filter: {accountTag: $accountTag}) {
-                    bandwidthTotals: httpRequestsOverviewAdaptiveGroups(filter: $filter, limit: $limit) {
+                    bandwidthTotals: httpRequestsOverviewAdaptiveGroups(
+                    filter: $filter, 
+                    limit: $limit
+                    ) {
                         sum {
                             bytes
+                        }
+                        dimensions {
+                            timestamp: date
                         }
                     }
                 }
@@ -225,7 +247,12 @@ def get_bandwidth(
     if response.status_code == 200:
         data = response.json()
         if data.get("data"):
-            print(json.dumps(data, indent=2))
+            pre_results = data["data"]["viewer"]["accounts"][0]["bandwidthTotals"]
+            results = {
+                item["dimensions"]["timestamp"]: item["sum"]["bytes"]
+                for item in pre_results
+            }
+            print(results)
         else:
             print(f"Error: {data.get('errors', 'Unknown error')}")
     else:
@@ -235,16 +262,21 @@ def get_bandwidth(
 # Total requests
 def get_requests(token: str, account_tag: str, limit: int, leq_date: str, periods: int):
     """
-    Get the total number of request for the period
+    Get the total number of requests per day for the period.
+
     Args:
         token (str): API Token to make requests.
         account_tag (str): Unique identifier for the Cloudflare account.
         limit (int): Maximum number of entries to return.
         leq_date (str): Less or equal date for the range (ISO 8601 format).
+        periods (int): Number of days in the range.
 
+    Returns:
+        dict: A dictionary with dates as keys and the number of requests as values.
     """
     # Date generation
     geq_date = geq_generator(leq_date, periods)
+
     # Query construction
     url = "https://api.cloudflare.com/client/v4/graphql"
     headers = {
@@ -253,12 +285,18 @@ def get_requests(token: str, account_tag: str, limit: int, leq_date: str, period
         "Accept": "application/json",
     }
     query = """
-        query GetRequests {
+        query GetRequestsPerDay($accountTag: String, $filter: Filter, $limit: Int) {
             viewer {
                 accounts(filter: {accountTag: $accountTag}) {
-                    requestsTotals: httpRequestsOverviewAdaptiveGroups(filter: $filter, limit: $limit) {
+                    requestsTotals: httpRequestsOverviewAdaptiveGroups(
+                        filter: $filter, 
+                        limit: $limit
+                    ) {
                         sum {
                             requests
+                        }
+                        dimensions {
+                            timestamp: date
                         }
                     }
                 }
@@ -275,14 +313,23 @@ def get_requests(token: str, account_tag: str, limit: int, leq_date: str, period
     }
     payload = {"query": query, "variables": variables}
     response = requests.post(url, headers=headers, json=payload)
+
+    # Parse the response
     if response.status_code == 200:
         data = response.json()
         if data.get("data"):
-            print(json.dumps(data, indent=2))
+            pre_results = data["data"]["viewer"]["accounts"][0]["requestsTotals"]
+            results = {
+                item["dimensions"]["timestamp"]: item["sum"]["requests"]
+                for item in pre_results
+            }
+            print(results)
         else:
             print(f"Error: {data.get('errors', 'Unknown error')}")
+            return {}
     else:
         print(f"HTTP Error {response.status_code}: {response.text}")
+        return {}
 
 
 # Bandwidth per country
@@ -341,7 +388,12 @@ def get_bandwidth_per_location(
     if response.status_code == 200:
         data = response.json()
         if data.get("data"):
-            print(json.dumps(data, indent=2))
+            pre_results = data["data"]["viewer"]["accounts"][0]["locationTotals"]
+            results = {
+                item["dimensions"]["clientCountryName"]: item["sum"]["bytes"]
+                for item in pre_results
+            }
+            print(results)
         else:
             print(f"Error: {data.get('errors', 'Unknown error')}")
     else:
@@ -396,7 +448,12 @@ def get_visits_total(
     if response.status_code == 200:
         data = response.json()
         if data.get("data"):
-            print(json.dumps(data, indent=2))
+            pre_results = data["data"]["viewer"]["accounts"][0]["statsOverTime"]
+            results = {
+                item["dimensions"]["timestamp"]: item["sum"]["visits"]
+                for item in pre_results
+            }
+            print(results)
         else:
             print(f"Error: {data.get('errors', 'Unknown error')}")
     else:
@@ -907,7 +964,7 @@ def get_encrypted_bandwidth(
         print(f"HTTP Error {response.status_code}: {response.text}")
 
 
-get_encrypted_bandwidth(TOKEN, ID, 10, "2024-12-16T22:58:00Z", 7)
+# get_encrypted_bandwidth(TOKEN, ID, 10, "2024-12-16T22:58:00Z", 7)
 # get_encrypted_requests(TOKEN, ID, 10, "2024-12-16T22:58:00Z", 7)
 # get_cached_bandwidth(TOKEN, ID, 10, "2024-12-16T22:58:00Z", 7)
 # get_cached_requests(TOKEN, ID, 10, "2024-12-16T22:58:00Z", 7)

@@ -1,0 +1,125 @@
+{
+  "data": {
+    "viewer": {
+      "__typename": "viewer",
+      "accounts": [
+        {
+          "__typename": "account",
+          "locationTotals": [
+            {
+              "__typename": "AccountHttpRequestsOverviewAdaptiveGroups",
+              "dimensions": {
+                "__typename": "AccountHttpRequestsOverviewAdaptiveGroupsDimensions",
+                "clientCountryName": "US"
+              },
+              "sum": {
+                "__typename": "AccountHttpRequestsOverviewAdaptiveGroupsSum",
+                "bytes": 25434471
+              }
+            },
+            {
+              "__typename": "AccountHttpRequestsOverviewAdaptiveGroups",
+              "dimensions": {
+                "__typename": "AccountHttpRequestsOverviewAdaptiveGroupsDimensions",
+                "clientCountryName": "DE"
+              },
+              "sum": {
+                "__typename": "AccountHttpRequestsOverviewAdaptiveGroupsSum",
+                "bytes": 27783115
+              }
+            },
+            {
+              "__typename": "AccountHttpRequestsOverviewAdaptiveGroups",
+              "dimensions": {
+                "__typename": "AccountHttpRequestsOverviewAdaptiveGroupsDimensions",
+                "clientCountryName": "BE"
+              },
+              "sum": {
+                "__typename": "AccountHttpRequestsOverviewAdaptiveGroupsSum",
+                "bytes": 10637617
+              }
+            },
+            {
+              "__typename": "AccountHttpRequestsOverviewAdaptiveGroups",
+              "dimensions": {
+                "__typename": "AccountHttpRequestsOverviewAdaptiveGroupsDimensions",
+                "clientCountryName": "DK"
+              },
+              "sum": {
+                "__typename": "AccountHttpRequestsOverviewAdaptiveGroupsSum",
+                "bytes": 9400704
+              }
+            },
+            {
+              "__typename": "AccountHttpRequestsOverviewAdaptiveGroups",
+              "dimensions": {
+                "__typename": "AccountHttpRequestsOverviewAdaptiveGroupsDimensions",
+                "clientCountryName": "SG"
+              },
+              "sum": {
+                "__typename": "AccountHttpRequestsOverviewAdaptiveGroupsSum",
+                "bytes": 9264217
+              }
+            },
+            {
+              "__typename": "AccountHttpRequestsOverviewAdaptiveGroups",
+              "dimensions": {
+                "__typename": "AccountHttpRequestsOverviewAdaptiveGroupsDimensions",
+                "clientCountryName": "BA"
+              },
+              "sum": {
+                "__typename": "AccountHttpRequestsOverviewAdaptiveGroupsSum",
+                "bytes": 18894429
+              }
+            },
+            {
+              "__typename": "AccountHttpRequestsOverviewAdaptiveGroups",
+              "dimensions": {
+                "__typename": "AccountHttpRequestsOverviewAdaptiveGroupsDimensions",
+                "clientCountryName": "GB"
+              },
+              "sum": {
+                "__typename": "AccountHttpRequestsOverviewAdaptiveGroupsSum",
+                "bytes": 6841118
+              }
+            },
+            {
+              "__typename": "AccountHttpRequestsOverviewAdaptiveGroups",
+              "dimensions": {
+                "__typename": "AccountHttpRequestsOverviewAdaptiveGroupsDimensions",
+                "clientCountryName": "BG"
+              },
+              "sum": {
+                "__typename": "AccountHttpRequestsOverviewAdaptiveGroupsSum",
+                "bytes": 4708958
+              }
+            },
+            {
+              "__typename": "AccountHttpRequestsOverviewAdaptiveGroups",
+              "dimensions": {
+                "__typename": "AccountHttpRequestsOverviewAdaptiveGroupsDimensions",
+                "clientCountryName": "NL"
+              },
+              "sum": {
+                "__typename": "AccountHttpRequestsOverviewAdaptiveGroupsSum",
+                "bytes": 1164032
+              }
+            },
+            {
+              "__typename": "AccountHttpRequestsOverviewAdaptiveGroups",
+              "dimensions": {
+                "__typename": "AccountHttpRequestsOverviewAdaptiveGroupsDimensions",
+                "clientCountryName": "IN"
+              },
+              "sum": {
+                "__typename": "AccountHttpRequestsOverviewAdaptiveGroupsSum",
+                "bytes": 418706
+              }
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "errors": null
+}
