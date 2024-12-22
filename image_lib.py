@@ -12,6 +12,77 @@ from path import Path
 CONTENT_TYPES = {"html": 14542, "txt": 314, "svg": 152, "js": 72, "unknown": 30}
 HTML_VERSIONS = {"HTTP/1.1": 14577, "HTTP/2": 495, "HTTP/3": 82, "HTTP/1.0": 58}
 SSL_TRAFFIC = {"TLSv1": 1, "TLSv1.3": 1599, "none": 13467, "TLSv1.2": 145}
+TEST_FOUR_ERRORS = {
+    "2024-12-10": 26,
+    "2024-12-13": 3018,
+    "2024-12-16": 2459,
+    "2024-12-12": 881,
+    "2024-12-11": 3644,
+    "2024-12-15": 651,
+    "2024-12-14": 3240,
+}
+TEST_FIVE_ERRORS = {
+    "2024-12-10": 1,
+    "2024-12-13": 18,
+    "2024-12-16": 11,
+    "2024-12-12": 345,
+    "2024-12-15": 4,
+    "2024-12-14": 7,
+}
+TEST_CACHED_BAND = {
+    "2024-12-10": 222032,
+    "2024-12-13": 204501,
+    "2024-12-16": 3578,
+    "2024-12-12": 592367,
+    "2024-12-11": 181506,
+    "2024-12-15": 386653,
+    "2024-12-14": 5819,
+}
+TEST_CACHED_REQ = {
+    "2024-12-10": 10,
+    "2024-12-13": 17,
+    "2024-12-16": 4,
+    "2024-12-12": 34,
+    "2024-12-11": 9,
+    "2024-12-15": 22,
+    "2024-12-14": 6,
+}
+TEST_ENCRYPTED_BAND = {
+    "2024-12-10": 676497,
+    "2024-12-13": 18390778,
+    "2024-12-16": 13246471,
+    "2024-12-12": 4295663,
+    "2024-12-11": 39549267,
+    "2024-12-15": 5199903,
+    "2024-12-14": 38248642,
+}
+TEST_ENCRYPTED_REQ = {
+    "2024-12-10": 68,
+    "2024-12-13": 3176,
+    "2024-12-16": 2576,
+    "2024-12-12": 1389,
+    "2024-12-11": 3818,
+    "2024-12-15": 801,
+    "2024-12-14": 3384,
+}
+TEST_VISITS = {
+    "2024-12-10": 4,
+    "2024-12-13": 60,
+    "2024-12-16": 71,
+    "2024-12-12": 66,
+    "2024-12-11": 78,
+    "2024-12-15": 62,
+    "2024-12-14": 56,
+}
+TEST_VIEWS = {
+    "2024-12-10": 4,
+    "2024-12-13": 68,
+    "2024-12-16": 80,
+    "2024-12-12": 80,
+    "2024-12-11": 90,
+    "2024-12-15": 75,
+    "2024-12-14": 70,
+}
 TEST_BYTES = {
     "2024-12-10": 676497,
     "2024-12-13": 18390778,
@@ -347,7 +418,7 @@ def create_horizontal_bar_chart(data: dict, output_file: str, title: str):
             ax.text(v, i, f"{v:,}", va="center", ha="left", fontsize=10)
 
         # Save chart
-        output_path = Path("./assets/general_stats")
+        output_path = Path("./assets/network/")
         output_path.mkdir_p()  # Ensure the directory exists
         save_path = output_path / output_file
         plt.tight_layout()
@@ -413,22 +484,63 @@ def create_request_map(data: dict, output_file: str, title: str):
         print(f"Error creating map visualization: {e}")
 
 
+# General stats
 create_request_map(
-    TEST_REQ_COUNT, "assets/general_stats/requests_map.png", "Requests by Country"
+    TEST_REQ_COUNT, "assets/general_stats/requests_map.png", "Requests por pais"
 )
-
-
-# create_horizontal_bar_chart(HTML_VERSIONS, "html_versions.png", "HTML versions")
-# create_horizontal_bar_chart(CONTENT_TYPES, "content_type", "Content by type")
-
-# create_table(
-#     TEST_REQ_COUNT, TEST_BAND_COUNT, "country_table.png", "./assets/general_stats/"
-# )
-
-# Example usage
-# get_timeserie(
-#     TEST_BYTES, "bandwidth_graph.png", "Bandwidth", False, "./assets/general_stats/"
-# )
-# get_timeserie(
-#     TEST_REQ, "requests_graph.png", "Requests", True, "./assets/general_stats/"
-# )
+create_table(TEST_REQ_COUNT, TEST_BAND_COUNT, "table.png", "./assets/general_stats/")
+get_timeserie(
+    TEST_BYTES, "bandwidth.png", "Bandwidth", False, "./assets/general_stats/"
+)
+get_timeserie(TEST_REQ, "requests.png", "Requests", True, "./assets/general_stats/")
+get_timeserie(TEST_VIEWS, "views.png", "Views", True, "./assets/general_stats/")
+get_timeserie(TEST_VISITS, "visitas.png", "Visitas", True, "./assets/general_stats/")
+# Security
+get_timeserie(
+    TEST_ENCRYPTED_REQ,
+    "encrypted_requests.png",
+    "Requests encriptados",
+    True,
+    "./assets/security/",
+)
+get_timeserie(
+    TEST_ENCRYPTED_BAND,
+    "encrypted_bandwidth.png",
+    "Bandwidth encriptado",
+    False,
+    "./assets/security/",
+)
+# Cache
+get_timeserie(
+    TEST_CACHED_REQ,
+    "cached_requests.png",
+    "Requests cacheados",
+    True,
+    "./assets/cache/",
+)
+get_timeserie(
+    TEST_CACHED_BAND,
+    "cached_bandwidth.png",
+    "Bandwidth cacheado",
+    False,
+    "./assets/cache/",
+)
+# Errors
+get_timeserie(
+    TEST_FOUR_ERRORS,
+    "four_errors.png",
+    "Errores 4xx",
+    True,
+    "./assets/errors/",
+)
+get_timeserie(
+    TEST_FIVE_ERRORS,
+    "five_errors.png",
+    "Errores 4xx",
+    True,
+    "./assets/errors/",
+)
+# Network
+create_horizontal_bar_chart(HTML_VERSIONS, "html_versions.png", "HTML versions")
+create_horizontal_bar_chart(CONTENT_TYPES, "content_type", "Content by type")
+create_horizontal_bar_chart(SSL_TRAFFIC, "ssl_content", "SSL Content")

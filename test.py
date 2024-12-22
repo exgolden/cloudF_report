@@ -25,6 +25,6 @@ if not TOKEN or not ID:
 # get_visits_total(TOKEN, ID, 10, "2024-12-16T22:58:00Z", 7)
 # get_bandwidth_per_location(TOKEN, ID, 10, "2024-12-16T22:58:00Z", 7)
 # get_requests_per_location(TOKEN, ID, "2024-12-16T22:58:00Z", 7)
-# get_error_totals(TOKEN, ID, 4, "2024-12-16T22:58:00Z", 7)
+# get_error_totals(TOKEN, ID, 5, "2024-12-16T22:58:00Z", 7)
 # get_requests(TOKEN, ID, 4, "2024-12-16T22:58:00Z", 7)
 get_ssl_traffic(TOKEN, ID, 4, "2024-12-16T22:58:00Z", 7)
