@@ -1011,16 +1011,3 @@ def get_encrypted_bandwidth(
             print(f"Error: {data.get('errors', 'Unknown error')}")
     else:
         print(f"HTTP Error {response.status_code}: {response.text}")
-
-
-# get_encrypted_bandwidth(TOKEN, ID, 10, "2024-12-16T22:58:00Z", 7)
-# get_encrypted_requests(TOKEN, ID, 10, "2024-12-16T22:58:00Z", 7)
-# get_cached_bandwidth(TOKEN, ID, 10, "2024-12-16T22:58:00Z", 7)
-# get_cached_requests(TOKEN, ID, 10, "2024-12-16T22:58:00Z", 7)
-# get_content_type(TOKEN, ID, 10, "2024-12-16T22:58:00Z", 7)
-# get_http_versions(TOKEN, ID, 10, "2024-12-16T22:58:00Z", 7)
-# get_bandwidth(TOKEN, ID, 10, "2024-12-16T22:58:00Z", 7)
-# get_page_views_total(TOKEN, ID, 10, "2024-12-16T22:58:00Z", 7)
-# get_bandwidth_per_location(TOKEN, ID, 10, "2024-12-16T22:58:00Z", 7)
-# get_requests_per_location(TOKEN, ID, 10, "2024-12-16T22:58:00Z", 7)
-# get_error_totals(TOKEN, ID, 4, "2024-12-16T22:58:00Z", 7)
