@@ -471,6 +471,7 @@ def get_page_views_total(
         limit (int): Maximum number of entries to return.
         leq_date (str): Less or equal date for the range (ISO 8601 format).
     """
+    # TODO: The name of the final wuery should be statsOverTime
     # Date generation
     geq_date = geq_generator(leq_date, periods)
     # Query construction
@@ -509,7 +510,12 @@ def get_page_views_total(
     if response.status_code == 200:
         data = response.json()
         if data.get("data"):
-            print(json.dumps(data, indent=2))
+            pre_results = data["data"]["viewer"]["accounts"][0]["statsOverTime"]
+            results = {
+                item["dimensions"]["timestamp"]: item["sum"]["pageViews"]
+                for item in pre_results
+            }
+            print(results)
         else:
             print(f"Error: {data.get('errors', 'Unknown error')}")
     else:
@@ -579,7 +585,12 @@ def get_http_versions(
     if response.status_code == 200:
         data = response.json()
         if data.get("data"):
-            print(json.dumps(data, indent=2))
+            pre_results = data["data"]["viewer"]["accounts"][0]["httpProtocols"]
+            results = {
+                item["dimensions"]["metric"]: item["sum"]["requests"]
+                for item in pre_results
+            }
+            print(results)
         else:
             print(f"Error: {data.get('errors', 'Unknown error')}")
     else:
@@ -648,7 +659,12 @@ def get_ssl_traffic(
     if response.status_code == 200:
         data = response.json()
         if data.get("data"):
-            print(json.dumps(data, indent=2))
+            pre_results = data["data"]["viewer"]["accounts"][0]["sslVersions"]
+            results = {
+                item["dimensions"]["metric"]: item["sum"]["requests"]
+                for item in pre_results
+            }
+            print(results)
         else:
             print(f"Error: {data.get('errors', 'Unknown error')}")
     else:
@@ -718,7 +734,12 @@ def get_content_type(
     if response.status_code == 200:
         data = response.json()
         if data.get("data"):
-            print(json.dumps(data, indent=2))
+            pre_results = data["data"]["viewer"]["accounts"][0]["contentTypes"]
+            results = {
+                item["dimensions"]["metric"]: item["sum"]["requests"]
+                for item in pre_results
+            }
+            print(results)
         else:
             print(f"Error: {data.get('errors', 'Unknown error')}")
     else:
@@ -776,7 +797,14 @@ def get_cached_requests(
     if response.status_code == 200:
         data = response.json()
         if data.get("data"):
-            print(json.dumps(data, indent=2))
+            pre_results = data["data"]["viewer"]["accounts"][0][
+                "cachedRequestsOverTime"
+            ]
+            results = {
+                item["dimensions"]["timestamp"]: item["sum"]["cachedRequests"]
+                for item in pre_results
+            }
+            print(results)
         else:
             print(f"Error: {data.get('errors', 'Unknown error')}")
     else:
@@ -836,7 +864,14 @@ def get_cached_bandwidth(
     if response.status_code == 200:
         data = response.json()
         if data.get("data"):
-            print(json.dumps(data, indent=2))
+            pre_results = data["data"]["viewer"]["accounts"][0][
+                "cachedBandwidthOverTime"
+            ]
+            results = {
+                item["dimensions"]["timestamp"]: item["sum"]["cachedBytes"]
+                for item in pre_results
+            }
+            print(results)
         else:
             print(f"Error: {data.get('errors', 'Unknown error')}")
     else:
@@ -897,7 +932,14 @@ def get_encrypted_requests(
     if response.status_code == 200:
         data = response.json()
         if data.get("data"):
-            print(json.dumps(data, indent=2))
+            pre_results = data["data"]["viewer"]["accounts"][0][
+                "encryptedRequestsOverTime"
+            ]
+            results = {
+                item["dimensions"]["timestamp"]: item["sum"]["requests"]
+                for item in pre_results
+            }
+            print(results)
         else:
             print(f"Error: {data.get('errors', 'Unknown error')}")
     else:
@@ -957,7 +999,14 @@ def get_encrypted_bandwidth(
     if response.status_code == 200:
         data = response.json()
         if data.get("data"):
-            print(json.dumps(data, indent=2))
+            pre_results = data["data"]["viewer"]["accounts"][0][
+                "encryptedBandwidthOverTime"
+            ]
+            results = {
+                item["dimensions"]["timestamp"]: item["sum"]["bytes"]
+                for item in pre_results
+            }
+            print(results)
         else:
             print(f"Error: {data.get('errors', 'Unknown error')}")
     else:
@@ -975,4 +1024,3 @@ def get_encrypted_bandwidth(
 # get_bandwidth_per_location(TOKEN, ID, 10, "2024-12-16T22:58:00Z", 7)
 # get_requests_per_location(TOKEN, ID, 10, "2024-12-16T22:58:00Z", 7)
 # get_error_totals(TOKEN, ID, 4, "2024-12-16T22:58:00Z", 7)
-#
