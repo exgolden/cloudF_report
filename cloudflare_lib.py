@@ -261,10 +261,9 @@ def get_bandwidth(
 
 # Total requests
 def get_requests(token: str, account_tag: str, limit: int, leq_date: str, periods: int):
- v  """
+   """
     Get the total number of requests per day for the period.
-
-v   Args:
+    Args:
         token (str): API Token to make requests.
         account_tag (str): Unique identifier for the Cloudflare account.
         limit (int): Maximum number of entries to return.
@@ -274,7 +273,7 @@ v   Args:
     Returns:
         dict: A dictionary with dates as keys and the number of requests as values.
     """
-    # Date generation
+    x = "Hello"
     geq_date = geq_generator(leq_date, periods)
 
     # Query construction
@@ -1011,3 +1010,22 @@ def get_encrypted_bandwidth(
             print(f"Error: {data.get('errors', 'Unknown error')}")
     else:
         print(f"HTTP Error {response.status_code}: {response.text}")
+
+# get_encrypted_bandwidth(TOKEN, ID, 10, "2024-12-16T22:58:00Z", 7)
+# get_encrypted_requests(TOKEN, ID, 10, "2024-12-16T22:58:00Z", 7)
+# get_cached_bandwidth(TOKEN, ID, 10, "2024-12-16T22:58:00Z", 7)
+# get_cached_requests(TOKEN, ID, 10, "2024-12-16T22:58:00Z", 7)
+# get_content_type(TOKEN, ID, 10, "2024-12-16T22:58:00Z", 7)
+# get_http_versions(TOKEN, ID, 10, "2024-12-16T22:58:00Z", 7)
+# get_bandwidth(TOKEN, ID, 10, "2024-12-16T22:58:00Z", 7)
+# get_page_views_total(TOKEN, ID, 10, "2024-12-16T22:58:00Z", 7)
+# get_visits_total(TOKEN, ID, 10, "2024-12-16T22:58:00Z", 7)
+# get_bandwidth_per_location(TOKEN, ID, 10, "2024-12-16T22:58:00Z", 7)
+get_requests_per_location(TOKEN, ID, "2024-12-16T22:58:00Z", 7)
+# get_error_totals(TOKEN, ID, 5, "2024-12-16T22:58:00Z", 7)
+# get_requests(TOKEN, ID, 4, "2024-12-16T22:58:00Z", 7)
+# get_ssl_traffic(TOKEN, ID, 4, "2024-12-16T22:58:00Z", 7)
+
+
+
+
