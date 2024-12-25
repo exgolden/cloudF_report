@@ -261,10 +261,10 @@ def get_bandwidth(
 
 # Total requests
 def get_requests(token: str, account_tag: str, limit: int, leq_date: str, periods: int):
-    """
+ v  """
     Get the total number of requests per day for the period.
 
-    Args:
+v   Args:
         token (str): API Token to make requests.
         account_tag (str): Unique identifier for the Cloudflare account.
         limit (int): Maximum number of entries to return.
