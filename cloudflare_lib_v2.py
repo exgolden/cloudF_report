@@ -686,6 +686,168 @@ def get_encrypted_requests(zone_tag: str, leq_date: str, periods: int) -> dict:
     except (KeyError, IndexError) as e:
         raise Exception(f"Error processing response: {e}")
 
+def get_encrypted_bandwidth(zone_tag: str, leq_date: str, periods: int) -> dict:
+    """
+    Retrieve the total amount of encrypted bandwidth for a specific zone within a given time range.
+    Args:
+        zone_tag (str): Unique identifier for the Cloudflare zone.
+        leq_date (str): End date of the range (inclusive) in ISO 8601 format (YYYY-MM-DD).
+        periods (int): Number of days before the end date to include in the range.
+    Returns:
+        dict: A dictionary containing dates as keys and the total encrypted bandwidth (in bytes) as values.
+    """
+    range_generated = range_generator(leq_date, periods)
+    query = """
+        query GetEncryptedBandwidth($accountTag: String, $filter: Filter) {
+            viewer {
+                accounts(filter: {accountTag: $accountTag}) {
+                    encryptedBandwidthOverTime: httpRequestsOverviewAdaptiveGroups(
+                        filter: {AND: [$filter, {edgeResponseStatus_lt: 600}]},
+                        limit: 2000
+                    ) {
+                        sum {
+                            bytes
+                        }
+                        dimensions {
+                            timestamp: date
+                        }
+                    }
+                }
+            }
+        }
+    """
+    variables = {
+        "accountTag": zone_tag,
+        "filter": {
+            "datetime_geq": range_generated["geq_date"],
+            "datetime_leq": range_generated["leq_date"],
+        },
+    }
+    response = execute_query(query, variables)
+    try:
+        accounts = response["data"]["viewer"]["accounts"]
+        if not accounts or not accounts[0].get("encryptedBandwidthOverTime"):
+            raise ValueError("No encrypted bandwidth data available in the response.")
+        encrypted_bandwidth = accounts[0]["encryptedBandwidthOverTime"]
+        results = {
+            item["dimensions"]["timestamp"]: item["sum"]["bytes"]
+            for item in encrypted_bandwidth
+        }
+        return results
+    except (KeyError, IndexError) as e:
+        raise Exception(f"Error processing response: {e}")
+
+# Error module
+def get_fourxx_errors(zone_tag: str, leq_date: str, periods: int) -> dict:
+    """
+    Retrieve the total amount of 4xx errors for a specific zone within a given time range.
+    Args:
+        zone_tag (str): Unique identifier for the Cloudflare zone.
+        leq_date (str): End date of the range (inclusive) in ISO 8601 format (YYYY-MM-DD).
+        periods (int): Number of days before the end date to include in the range.
+    Returns:
+        dict: A dictionary containing dates as keys and the total 4xx errors as values.
+    """
+    range_generated = range_generator(leq_date, periods)
+    query = """
+        query GetErrorTotals($accountTag: String, $filter: Filter, $errorFilter: Filter) {
+            viewer {
+                accounts(filter: {accountTag: $accountTag}) {
+                    errorStats: httpRequestsOverviewAdaptiveGroups(
+                        filter: {AND: [$filter, $errorFilter]},
+                        limit: 2000
+                    ) {
+                        sum {
+                            requests
+                        }
+                        dimensions {
+                            timestamp: date
+                        }
+                    }
+                }
+            }
+        }
+    """
+    variables = {
+        "accountTag": zone_tag,
+        "filter": {
+            "datetime_geq": range_generated["geq_date"],
+            "datetime_leq": range_generated["leq_date"],
+        },
+        "errorFilter": {
+            "edgeResponseStatus_geq": 400,
+            "edgeResponseStatus_lt": 500,
+        },
+    }
+    response = execute_query(query, variables)
+    try:
+        accounts = response["data"]["viewer"]["accounts"]
+        if not accounts or not accounts[0].get("errorStats"):
+            raise ValueError("No 4xx error data available in the response.")
+        error_stats = accounts[0]["errorStats"]
+        results = {
+            item["dimensions"]["timestamp"]: item["sum"]["requests"]
+            for item in error_stats
+        }
+        return results
+    except (KeyError, IndexError) as e:
+        raise Exception(f"Error processing response for 4xx errors: {e}") 
+
+def get_fivexx_errors(zone_tag: str, leq_date: str, periods: int) -> dict:
+    """
+    Retrieve the total amount of 5xx errors for a specific zone within a given time range.
+    Args:
+        zone_tag (str): Unique identifier for the Cloudflare zone.
+        leq_date (str): End date of the range (inclusive) in ISO 8601 format (YYYY-MM-DD).
+        periods (int): Number of days before the end date to include in the range.
+    Returns:
+        dict: A dictionary containing dates as keys and the total 5xx errors as values.
+    """
+    range_generated = range_generator(leq_date, periods)
+    query = """
+        query GetErrorTotals($accountTag: String, $filter: Filter, $errorFilter: Filter) {
+            viewer {
+                accounts(filter: {accountTag: $accountTag}) {
+                    errorStats: httpRequestsOverviewAdaptiveGroups(
+                        filter: {AND: [$filter, $errorFilter]},
+                        limit: 2000
+                    ) {
+                        sum {
+                            requests
+                        }
+                        dimensions {
+                            timestamp: date
+                        }
+                    }
+                }
+            }
+        }
+    """
+    variables = {
+        "accountTag": zone_tag,
+        "filter": {
+            "datetime_geq": range_generated["geq_date"],
+            "datetime_leq": range_generated["leq_date"],
+        },
+        "errorFilter": {
+            "edgeResponseStatus_geq": 500,
+            "edgeResponseStatus_lt": 600,
+        },
+    }
+    response = execute_query(query, variables)
+    try:
+        accounts = response["data"]["viewer"]["accounts"]
+        if not accounts or not accounts[0].get("errorStats"):
+            raise ValueError("No 5xx error data available in the response.")
+        error_stats = accounts[0]["errorStats"]
+        results = {
+            item["dimensions"]["timestamp"]: item["sum"]["requests"]
+            for item in error_stats
+        }
+        return results
+    except (KeyError, IndexError) as e:
+        raise Exception(f"Error processing response for 5xx errors: {e}")
+
 # General module
 # print(range_generator("2024-12-16", 7))
 # Stats module
@@ -704,10 +866,7 @@ def get_encrypted_requests(zone_tag: str, leq_date: str, periods: int) -> dict:
 # print(get_cached_bandwidth(ID, "2024-12-16", 7))
 # Security module
 # print(get_encrypted_requests(ID, "2024-12-16", 7))
-
-
-# get_encrypted_bandwidth(TOKEN, ID, 10, "2024-12-16T22:58:00Z", 7)
-# get_encrypted_requests(TOKEN, ID, 10, "2024-12-16T22:58:00Z", 7)
-# get_error_totals(TOKEN, ID, 5, "2024-12-16T22:58:00Z", 7)
-# print(range_generator("2024-12-16", 7))
-
+# print(get_encrypted_bandwidth(ID, "2024-12-16", 7))
+# Errors module
+# print(get_fourxx_errors(ID, "2024-12-16", 7))
+# print(get_fivexx_errors(ID, "2024-12-16", 7))
