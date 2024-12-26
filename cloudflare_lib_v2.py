@@ -377,8 +377,217 @@ def get_views(zone_tag: str, leq_date: str, periods: int) -> dict:
     except (KeyError, IndexError) as e:
         raise Exception(f"Error processing response: {e}")
 
+# Network module
+def get_http_versions(zone_tag: str, leq_date: str, periods: int) -> dict:
+    """
+    Retrieve the HTTP client versions used for a specific zone within a given time range.
+    Args:
+        zone_tag (str): Unique identifier for the Cloudflare zone.
+        leq_date (str): End date of the range (inclusive) in ISO 8601 format (YYYY-MM-DD).
+        periods (int): Number of days before the end date to include in the range.
+    Returns:
+        dict: A dictionary containing HTTP client versions as keys and their respective request counts as values.
+    """
+    range_generated = range_generator(leq_date, periods)
+    query = """
+        query GetHttpProtocols($accountTag: String, $filter: Filter) {
+            viewer {
+                accounts(filter: {accountTag: $accountTag}) {
+                    httpProtocols: httpRequestsOverviewAdaptiveGroups(
+                        filter: $filter,
+                        limit: 5,
+                        orderBy: [sum_requests_DESC]
+                    ) {
+                        sum {
+                            requests
+                        }
+                        dimensions {
+                            metric: clientRequestHTTPProtocol
+                        }
+                    }
+                }
+            }
+        }
+    """
+    variables = {
+        "accountTag": zone_tag,
+        "filter": {
+            "datetime_geq": range_generated["geq_date"],
+            "datetime_leq": range_generated["leq_date"],
+        },
+    }
+    response = execute_query(query, variables)
+    try:
+        accounts = response["data"]["viewer"]["accounts"]
+        if not accounts or not accounts[0].get("httpProtocols"):
+            raise ValueError("No HTTP protocols data available in the response.")
+        http_protocols = accounts[0]["httpProtocols"]
+        results = {
+            item["dimensions"]["metric"]: item["sum"]["requests"]
+            for item in http_protocols
+        }
+        return results
+    except (KeyError, IndexError) as e:
+        raise Exception(f"Error processing response: {e}")
+
+def get_ssl_traffic(zone_tag: str, leq_date: str, periods: int) -> dict:
+    """
+    Retrieve the traffic served over SSL for a specific zone within a given time range.
+    Args:
+        zone_tag (str): Unique identifier for the Cloudflare zone.
+        leq_date (str): End date of the range (inclusive) in ISO 8601 format (YYYY-MM-DD).
+        periods (int): Number of days before the end date to include in the range.
+    Returns:
+        dict: A dictionary containing SSL protocols as keys and their respective request counts as values.
+    """
+    range_generated = range_generator(leq_date, periods)
+    query = """
+        query GetSSLVersions($accountTag: String, $filter: Filter) {
+            viewer {
+                accounts(filter: {accountTag: $accountTag}) {
+                    sslVersions: httpRequestsOverviewAdaptiveGroups(
+                        filter: $filter,
+                        limit: 5
+                    ) {
+                        sum {
+                            requests
+                        }
+                        dimensions {
+                            metric: clientSSLProtocol
+                        }
+                    }
+                }
+            }
+        }
+    """
+    variables = {
+        "accountTag": zone_tag,
+        "filter": {
+            "datetime_geq": range_generated["geq_date"],
+            "datetime_leq": range_generated["leq_date"],
+        },
+    }
+    response = execute_query(query, variables)
+    try:
+        accounts = response["data"]["viewer"]["accounts"]
+        if not accounts or not accounts[0].get("sslVersions"):
+            raise ValueError("No SSL versions data available in the response.")
+        ssl_versions = accounts[0]["sslVersions"]
+        results = {
+            item["dimensions"]["metric"]: item["sum"]["requests"]
+            for item in ssl_versions
+        }
+        return results
+    except (KeyError, IndexError) as e:
+        raise Exception(f"Error processing response: {e}")
+
+def get_content_type(zone_tag: str, leq_date: str, periods: int) -> dict:
+    """
+    Retrieve the top types of content served for a specific zone within a given time range.
+    Args:
+        zone_tag (str): Unique identifier for the Cloudflare zone.
+        leq_date (str): End date of the range (inclusive) in ISO 8601 format (YYYY-MM-DD).
+        periods (int): Number of days before the end date to include in the range.
+    Returns:
+        dict: A dictionary containing content types as keys and their respective request counts as values.
+    """
+    range_generated = range_generator(leq_date, periods)
+    query = """
+        query GetTopContentTypes($accountTag: String, $filter: Filter) {
+            viewer {
+                accounts(filter: {accountTag: $accountTag}) {
+                    contentTypes: httpRequestsOverviewAdaptiveGroups(
+                        filter: $filter,
+                        limit: 5,
+                        orderBy: [sum_requests_DESC]
+                    ) {
+                        sum {
+                            requests
+                        }
+                        dimensions {
+                            metric: edgeResponseContentTypeName
+                        }
+                    }
+                }
+            }
+        }
+    """
+    variables = {
+        "accountTag": zone_tag,
+        "filter": {
+            "datetime_geq": range_generated["geq_date"],
+            "datetime_leq": range_generated["leq_date"],
+        },
+    }
+    response = execute_query(query, variables)
+    try:
+        accounts = response["data"]["viewer"]["accounts"]
+        if not accounts or not accounts[0].get("contentTypes"):
+            raise ValueError("No content type data available in the response.")
+        content_types = accounts[0]["contentTypes"]
+        results = {
+            item["dimensions"]["metric"]: item["sum"]["requests"]
+            for item in content_types
+        }
+        return results
+    except (KeyError, IndexError) as e:
+        raise Exception(f"Error processing response: {e}")
+
+def get_cached_requests(zone_tag: str, leq_date: str, periods: int) -> dict:
+    """
+    Retrieve the total number of cached requests for a specific zone within a given time range.
+    Args:
+        zone_tag (str): Unique identifier for the Cloudflare zone.
+        leq_date (str): End date of the range (inclusive) in ISO 8601 format (YYYY-MM-DD).
+        periods (int): Number of days before the end date to include in the range.
+    Returns:
+        dict: A dictionary containing dates as keys and the number of cached requests as values.
+    """
+    range_generated = range_generator(leq_date, periods)
+    query = """
+        query GetCachedRequests($accountTag: String, $filter: Filter) {
+            viewer {
+                accounts(filter: {accountTag: $accountTag}) {
+                    cachedRequestsOverTime: httpRequestsOverviewAdaptiveGroups(
+                        filter: $filter,
+                        limit: 2000
+                    ) {
+                        sum {
+                            cachedRequests
+                        }
+                        dimensions {
+                            timestamp: date
+                        }
+                    }
+                }
+            }
+        }
+    """
+    variables = {
+        "accountTag": zone_tag,
+        "filter": {
+            "datetime_geq": range_generated["geq_date"],
+            "datetime_leq": range_generated["leq_date"],
+        },
+    }
+    response = execute_query(query, variables)
+    try:
+        accounts = response["data"]["viewer"]["accounts"]
+        if not accounts or not accounts[0].get("cachedRequestsOverTime"):
+            raise ValueError("No cached requests data available in the response.")
+        cached_requests = accounts[0]["cachedRequestsOverTime"]
+        results = {
+            item["dimensions"]["timestamp"]: item["sum"]["cachedRequests"]
+            for item in cached_requests
+        }
+        return results
+    except (KeyError, IndexError) as e:
+        raise Exception(f"Error processing response: {e}")
 
 
+
+# General module
+# print(range_generator("2024-12-16", 7))
 # Stats module
 # print(get_requests_per_location(ID, "2024-12-16", 7))
 # print(get_requests(ID, "2024-12-16", 7))
@@ -386,17 +595,17 @@ def get_views(zone_tag: str, leq_date: str, periods: int) -> dict:
 # print(get_bandwidth(ID, "2024-12-16", 7))
 # print(get_visits(ID, "2024-12-16", 7))
 # print(get_views(ID, "2024-12-16", 7))
-
+# Network module
+# print(get_http_versions(ID, "2024-12-16", 7))
+# print(get_ssl_traffic(ID, "2024-12-16", 7))
+# print(get_content_type(ID, "2024-12-16", 7))
+# Cache module
 
 
 # get_encrypted_bandwidth(TOKEN, ID, 10, "2024-12-16T22:58:00Z", 7)
 # get_encrypted_requests(TOKEN, ID, 10, "2024-12-16T22:58:00Z", 7)
 # get_cached_bandwidth(TOKEN, ID, 10, "2024-12-16T22:58:00Z", 7)
 # get_cached_requests(TOKEN, ID, 10, "2024-12-16T22:58:00Z", 7)
-# get_content_type(TOKEN, ID, 10, "2024-12-16T22:58:00Z", 7)
-# get_http_versions(TOKEN, ID, 10, "2024-12-16T22:58:00Z", 7)
-# get_bandwidth_per_location(TOKEN, ID, 10, "2024-12-16T22:58:00Z", 7)
 # get_error_totals(TOKEN, ID, 5, "2024-12-16T22:58:00Z", 7)
-# get_ssl_traffic(TOKEN, ID, 4, "2024-12-16T22:58:00Z", 7)
 # print(range_generator("2024-12-16", 7))
 
