@@ -584,6 +584,56 @@ def get_cached_requests(zone_tag: str, leq_date: str, periods: int) -> dict:
     except (KeyError, IndexError) as e:
         raise Exception(f"Error processing response: {e}")
 
+def get_cached_bandwidth(zone_tag: str, leq_date: str, periods: int) -> dict:
+    """
+    Retrieve the total amount of cached bandwidth for a specific zone within a given time range.
+    Args:
+        zone_tag (str): Unique identifier for the Cloudflare zone.
+        leq_date (str): End date of the range (inclusive) in ISO 8601 format (YYYY-MM-DD).
+        periods (int): Number of days before the end date to include in the range.
+    Returns:
+        dict: A dictionary containing dates as keys and the amount of cached bandwidth (in bytes) as values.
+    """
+    range_generated = range_generator(leq_date, periods)
+    query = """
+        query GetCachedBandwidth($accountTag: String, $filter: Filter) {
+            viewer {
+                accounts(filter: {accountTag: $accountTag}) {
+                    cachedBandwidthOverTime: httpRequestsOverviewAdaptiveGroups(
+                        filter: $filter,
+                        limit: 2000
+                    ) {
+                        sum {
+                            cachedBytes
+                        }
+                        dimensions {
+                            timestamp: date
+                        }
+                    }
+                }
+            }
+        }
+    """
+    variables = {
+        "accountTag": zone_tag,
+        "filter": {
+            "datetime_geq": range_generated["geq_date"],
+            "datetime_leq": range_generated["leq_date"],
+        },
+    }
+    response = execute_query(query, variables)
+    try:
+        accounts = response["data"]["viewer"]["accounts"]
+        if not accounts or not accounts[0].get("cachedBandwidthOverTime"):
+            raise ValueError("No cached bandwidth data available in the response.")
+        cached_bandwidth = accounts[0]["cachedBandwidthOverTime"]
+        results = {
+            item["dimensions"]["timestamp"]: item["sum"]["cachedBytes"]
+            for item in cached_bandwidth
+        }
+        return results
+    except (KeyError, IndexError) as e:
+        raise Exception(f"Error processing response: {e}")
 
 
 # General module
@@ -600,12 +650,18 @@ def get_cached_requests(zone_tag: str, leq_date: str, periods: int) -> dict:
 # print(get_ssl_traffic(ID, "2024-12-16", 7))
 # print(get_content_type(ID, "2024-12-16", 7))
 # Cache module
+# print(get_cached_requests(ID, "2024-12-16", 7))
+# print(get_cached_bandwidth(ID, "2024-12-16", 7))
+
+
+
+
+
+# print(get_encrypted_requests(ID, "2024-12-16", 7))
 
 
 # get_encrypted_bandwidth(TOKEN, ID, 10, "2024-12-16T22:58:00Z", 7)
 # get_encrypted_requests(TOKEN, ID, 10, "2024-12-16T22:58:00Z", 7)
-# get_cached_bandwidth(TOKEN, ID, 10, "2024-12-16T22:58:00Z", 7)
-# get_cached_requests(TOKEN, ID, 10, "2024-12-16T22:58:00Z", 7)
 # get_error_totals(TOKEN, ID, 5, "2024-12-16T22:58:00Z", 7)
 # print(range_generator("2024-12-16", 7))
 
