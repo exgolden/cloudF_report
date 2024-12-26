@@ -635,6 +635,56 @@ def get_cached_bandwidth(zone_tag: str, leq_date: str, periods: int) -> dict:
     except (KeyError, IndexError) as e:
         raise Exception(f"Error processing response: {e}")
 
+def get_encrypted_requests(zone_tag: str, leq_date: str, periods: int) -> dict:
+    """
+    Retrieve the total amount of encrypted requests for a specific zone within a given time range.
+    Args:
+        zone_tag (str): Unique identifier for the Cloudflare zone.
+        leq_date (str): End date of the range (inclusive) in ISO 8601 format (YYYY-MM-DD).
+        periods (int): Number of days before the end date to include in the range.
+    Returns:
+        dict: A dictionary containing dates as keys and the number of encrypted requests as values.
+    """
+    range_generated = range_generator(leq_date, periods)
+    query = """
+        query GetEncryptedRequests($accountTag: String, $filter: Filter) {
+            viewer {
+                accounts(filter: {accountTag: $accountTag}) {
+                    encryptedRequestsOverTime: httpRequestsOverviewAdaptiveGroups(
+                        filter: {AND: [$filter, {edgeResponseStatus_lt: 600}]},
+                        limit: 2000
+                    ) {
+                        sum {
+                            requests
+                        }
+                        dimensions {
+                            timestamp: date
+                        }
+                    }
+                }
+            }
+        }
+    """
+    variables = {
+        "accountTag": zone_tag,
+        "filter": {
+            "datetime_geq": range_generated["geq_date"],
+            "datetime_leq": range_generated["leq_date"],
+        },
+    }
+    response = execute_query(query, variables)
+    try:
+        accounts = response["data"]["viewer"]["accounts"]
+        if not accounts or not accounts[0].get("encryptedRequestsOverTime"):
+            raise ValueError("No encrypted request data available in the response.")
+        encrypted_requests = accounts[0]["encryptedRequestsOverTime"]
+        results = {
+            item["dimensions"]["timestamp"]: item["sum"]["requests"]
+            for item in encrypted_requests
+        }
+        return results
+    except (KeyError, IndexError) as e:
+        raise Exception(f"Error processing response: {e}")
 
 # General module
 # print(range_generator("2024-12-16", 7))
@@ -652,11 +702,7 @@ def get_cached_bandwidth(zone_tag: str, leq_date: str, periods: int) -> dict:
 # Cache module
 # print(get_cached_requests(ID, "2024-12-16", 7))
 # print(get_cached_bandwidth(ID, "2024-12-16", 7))
-
-
-
-
-
+# Security module
 # print(get_encrypted_requests(ID, "2024-12-16", 7))
 
 
