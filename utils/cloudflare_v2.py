@@ -2,7 +2,6 @@
  V2 functions neccesary to run the Cloudflare API
 """
 
-import json
 import os
 from datetime import datetime, timedelta
 import requests
