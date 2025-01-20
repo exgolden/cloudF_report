@@ -1,0 +1,119 @@
+{% extends "base.html" %}
+{% block title %}user{% endblock %}
+{% block content %}
+<h2 class="text-center mb-5">Acme</h2>
+
+<!-- Manual Report Generation -->
+<div class="card shadow-sm mb-5">
+    <div class="card-header">
+        <h5 class="mb-0">Generar Reporte Manual</h5>
+    </div>
+    <div class="card-body">
+        <form>
+            <div class="row mb-3">
+                <div class="col-md-6">
+                    <label for="startDate" class="form-label">Fecha Inicio</label>
+                    <input type="date" class="form-control" id="startDate">
+                </div>
+                <div class="col-md-6">
+                    <label for="endDate" class="form-label">Fecha Fin</label>
+                    <input type="date" class="form-control" id="endDate">
+                </div>
+            </div>
+            <div class="mb-3">
+                <label for="reportType" class="form-label">Tipo de Reporte</label>
+                <select class="form-select" id="reportType">
+                    <option selected>Seleccione un tipo...</option>
+                    <option value="1">Uso de Banda</option>
+                    <option value="2">Cache Status</option>
+                    <option value="3">Errores 4XX/5XX</option>
+                    <option value="4">Reporte completo</option>
+                </select>
+            </div>
+            <div class="card-body">
+                <a href="{{ url_for('download_report') }}" class="btn btn-dark">Generar Reporte</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Security and Cache Recommendations -->
+<div class="row mb-5">
+    <div class="col-md-6">
+        <div class="alert alert-success">
+            <h5 class="alert-heading">Cache Status: Optimizado</h5>
+            <p>Los headers de caché están correctamente configurados para recursos estáticos.</p>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="alert alert-danger">
+            <h5 class="alert-heading">Seguridad: Mejorar</h5>
+            <p>Faltan headers de seguridad como `Content-Security-Policy` y `X-Frame-Options`.</p>
+        </div>
+    </div>
+</div>
+
+<!-- Ticket Section -->
+<div class="card shadow-sm">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <h5 class="mb-0">Tickets de Soporte</h5>
+        <button class="btn btn-outline-dark btn-sm" data-bs-toggle="modal" data-bs-target="#newTicketModal">Crear Ticket</button>
+    </div>
+    <div class="card-body">
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Descripción</th>
+                    <th>Prioridad</th>
+                    <th>Estado</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>#101</td>
+                    <td>Error de caché en página principal</td>
+                    <td class="text-danger">Alta</td>
+                    <td class="text-success">Resuelto</td>
+                </tr>
+                <tr>
+                    <td>#102</td>
+                    <td>Deshabilitar caché en secciones dinámicas</td>
+                    <td class="text-warning">Media</td>
+                    <td class="text-dark">En proceso</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Modal for New Ticket -->
+<div class="modal fade" id="newTicketModal" tabindex="-1" aria-labelledby="newTicketModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="newTicketModalLabel">Nuevo Ticket</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form>
+                    <div class="mb-3">
+                        <label for="ticketDesc" class="form-label">Descripción del problema</label>
+                        <textarea class="form-control" id="ticketDesc" rows="3"></textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label for="ticketPriority" class="form-label">Prioridad</label>
+                        <select class="form-select" id="ticketPriority">
+                            <option selected>Baja</option>
+                            <option value="1">Media</option>
+                            <option value="2">Alta</option>
+                        </select>
+                    </div>
+                    <button type="submit" class="btn btn-dark">Enviar</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+

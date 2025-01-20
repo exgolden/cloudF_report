@@ -1,349 +1,42 @@
 """
-Get basic CloudFlare analytics using the plain API
+Backend
 """
 
-import json
-import os
+from flask import Flask, render_template, send_from_directory
 
-import dotenv as env
-import requests
-
-env.load_dotenv()
-TOKEN = os.getenv("CF_API_TOKEN")
-ID = os.getenv("ACCOUNT_ID")
-if not TOKEN or not ID:
-    raise ValueError("No token or account ID found in configuration")
+app = Flask(__name__)
 
 
-def get_analtics(account_id: str, token: str):
+@app.route("/")
+def homeTEST():
     """
-    Get dashboard analytics for a given account
+    Home route
     """
-    url = (
-        f"https://api.cloudflare.com/client/v4/accounts/{account_id}/rum/site_info/list"
+    return render_template("base.html")
+
+
+@app.route("/admin")
+def admin():
+    """
+    Admin route
+    """
+    return render_template("admin.html")
+
+
+@app.route("/user")
+def user():
+    """
+    User route
+    """
+    return render_template("user.html")
+
+
+@app.route("/download/report")
+def download_report():
+    return send_from_directory(
+        directory="assets", path="report.pdf", as_attachment=True
     )
-    # url = f"https://api.cloudflare.com/client/v4/accounts/{account_id}/analytics/dashboard"
-    headers = {"Authorization": f"Bearer {token}", "Content-Type": "application/json"}
-    response = requests.get(url, headers=headers)
-    if response.status_code == 200:
-        data = response.json()
-        if data["success"]:
-            print(data)
-            # totals = data["result"]["totals"]
-            # print("Basic Analytics:")
-            # print(f"Requests: {totals['requests']}")
-            # print(f"Bandwidth: {totals['bandwidth']} bytes")
-            # print(f"Threats: {totals['threats']}")
-            # print(f"Uniques: {totals['uniques']}")
-        else:
-            print(f"API Error: {data['errors']}")
-    else:
-        print(f"HTTP Error {response.status_code}: {response.text}")
 
 
-def get_accounts(token: str):
-    """
-    Get basic data on accounts
-    """
-    url = "https://api.cloudflare.com/client/v4/accounts"
-    headers = {"Authorization": f"Bearer {token}", "Content-Type": "application/json"}
-    response = requests.get(url, headers=headers)
-    if response.status_code == 200:
-        data = response.json()
-        if data["success"]:
-            print("Accounts: ")
-            for account in data["result"]:
-                print(f"Name: {account['name']}, ID: {account['id']}")
-        else:
-            print(f"API Error: {data['errors']}")
-    else:
-        print(f"HTTP Error: {response.status_code} - {response.text}")
-
-
-def get_http_request(token: str, account_id: str):
-    """
-    Get http request from an account
-    """
-    url = "https://api.cloudflare.com/client/v4/graphql"
-    headers = {
-        "Authorization": f"Bearer {token}",
-        "Content-Type": "application/json",
-        "Accept": "application/json",
-    }
-    query = """
-        query RequestsAndDataTransferByHostname($zoneTag: string, $filter:filter) {
-    viewer {
-      zones(filter: {zoneTag: $zoneTag}) {
-        httpRequestsAdaptiveGroups(limit: 10, filter: $filter) {
-          sum {
-            visits
-            edgeResponseBytes
-          }
-          dimensions {
-            datetimeHour
-          }
-        }
-      }
-    }
-  }
-    """
-    variables = {
-        "zoneTag": account_id,
-        "filter": {
-            "datetime_geq": "2024-12-01T11:00:00Z",
-            "datetime_lt": "2024-12-10T12:00:00Z",
-            "clientRequestHTTPHost": "flexware.mx",
-            "requestSource": "eyeball",
-        },
-    }
-    payload = {"query": query, "variables": variables}
-    response = requests.post(url, headers=headers, json=payload)
-    if response.status_code == 200:
-        data = response.json()
-        if data.get("data"):
-            print(json.dumps(data, indent=2))
-        else:
-            print(f"Error: {data.get('errors', 'Unknown error')}")
-    else:
-        print(f"HTTP Error {response.status_code}: {response.text}")
-
-
-def get_zones(token: str):
-    """
-    Get the zones and their id's
-    """
-    url = "https://api.cloudflare.com/client/v4/zones"
-    headers = {"Authorization": f"Bearer {token}", "Content-Type": "application/json"}
-    response = requests.get(url, headers=headers)
-    if response.status_code == 200:
-        data = response.json()
-        if data.get("success"):
-            print("Zones:")
-            for zone in data.get("result", []):
-                print(f"- Name: {zone['name']}, ID: {zone['id']}")
-        else:
-            print(f"API Error: {data.get('errors')}")
-    else:
-        print(f"HTTP Error {response.status_code}: {response.text}")
-
-
-def get_http_version_used(token: str, account_id: str):
-    """
-    Retrieve the http version used by the client
-    """
-    # TODO: Add the dates as a variable
-    url = "https://api.cloudflare.com/client/v4/graphql"
-    headers = {
-        "Authorization": f"Bearer {token}",
-        "Content-Type": "application/json",
-        "Accept": "application/json",
-    }
-    query = """
-        query GetHttpProtocols {
-            viewer {
-                accounts(filter: {accountTag: $accountTag}) {
-                    total: httpRequestsOverviewAdaptiveGroups(filter: $filter, limit: 1) {
-                        sum {
-                            requests
-                            __typename
-                        }
-                        __typename
-                    }
-                httpProtocols: httpRequestsOverviewAdaptiveGroups(filter: $filter, limit: 5, orderBy: [sum_requests_DESC]) {
-                    sum {
-                        requests
-                        __typename
-                    }
-                    dimensions {
-                        metric: clientRequestHTTPProtocol
-                        __typename
-                    }
-                    __typename
-                }
-                __typename
-                }
-                __typename
-            }
-        }
-    """
-    variables = {
-        "accountTag": account_id,
-        "filter": {
-            "datetime_geq": "2024-12-09T22:58:00Z",
-            "datetime_leq": "2024-12-16T22:58:00Z",
-        },
-    }
-    payload = {"query": query, "variables": variables}
-    response = requests.post(url, headers=headers, json=payload)
-    if response.status_code == 200:
-        data = response.json()
-        if data.get("data"):
-            print(json.dumps(data, indent=2))
-        else:
-            print(f"Error: {data.get('errors', 'Unknown error')}")
-    else:
-        print(f"HTTP Error {response.status_code}: {response.text}")
-
-
-def get_locations(token: str, account_id: str, limit: int):
-    """
-    Get number of requests and bandwidth grouped by country
-    """
-    # TODO: Add dates as variables
-    # TODO: Add limit as a variable
-    url = "https://api.cloudflare.com/client/v4/graphql"
-    headers = {
-        "Authorization": f"Bearer {token}",
-        "Content-Type": "application/json",
-        "Accept": "application/json",
-    }
-    query = """
-        query GetLocations {
-            viewer {
-                accounts(filter: {accountTag: $accountTag}) {
-                    locationTotals: httpRequestsOverviewAdaptiveGroups(filter:
-                    $filter, limit: $limit, orderBy: [sum_requests_DESC]) {
-                        sum {
-                            requests
-                            bytes
-                            __typename
-                        }
-                        dimensions {
-                          clientCountryName
-                          __typename
-                        }
-                        __typename
-                    }
-                    __typename
-                }
-                __typename
-            }
-        }
-    """
-    variables = {
-        "accountTag": account_id,
-        "limit": limit,
-        "filter": {
-            "datetime_geq": "2024-12-09T22:58:00Z",
-            "datetime_leq": "2024-12-16T22:58:00Z",
-        },
-    }
-    payload = {"query": query, "variables": variables}
-    response = requests.post(url, headers=headers, json=payload)
-    if response.status_code == 200:
-        data = response.json()
-        if data.get("data"):
-            print(json.dumps(data, indent=2))
-        else:
-            print(f"Error: {data.get('errors', 'Unknown error')}")
-    else:
-        print(f"HTTP Error {response.status_code}: {response.text}")
-
-
-def get_account_settings(token: str, account_id: str):
-    """
-    Get basic stats from the acocunt
-    """
-    # TODO: Add dates as variables
-    url = "https://api.cloudflare.com/client/v4/graphql"
-    headers = {
-        "Authorization": f"Bearer {token}",
-        "Content-Type": "application/json",
-        "Accept": "application/json",
-    }
-    query = """
-        query GetAccountSettings($accountTag: string) {
-            viewer {
-                accounts(filter: {accountTag: $accountTag}) {
-                    settings {
-                        httpRequestsOverviewAdaptiveGroups {
-                            ...AccountSettings
-                            __typename
-                        }
-                        httpRequestsAdaptiveGroups {
-                            ...AccountSettings
-                            __typename
-                        }
-                        advancedDnsProtectionNetworkAnalyticsAdaptiveGroups {
-                            ...AccountSettings
-                            __typename
-                        }
-                        dosdNetworkAnalyticsAdaptiveGroups {
-                            ...AccountSettings
-                            __typename
-                        }
-                        dosdAttackAnalyticsGroups {
-                            ...AccountSettings
-                            __typename
-                        }
-                        firewallEventsAdaptive {
-                            ...AccountSettings
-                            __typename
-                        }
-                        firewallEventsAdaptiveGroups {
-                            ...AccountSettings
-                            __typename
-                        }
-                        flowtrackdNetworkAnalyticsAdaptiveGroups {
-                            ...AccountSettings
-                            __typename
-                        }
-                        magicTransitNetworkAnalyticsAdaptiveGroups {
-                            ...AccountSettings
-                            __typename
-                        }
-                        magicTransitTunnelTrafficAdaptiveGroups {
-                            ...AccountSettings
-                            __typename
-                        }
-                        magicFirewallNetworkAnalyticsAdaptiveGroups {
-                           ...AccountSettings
-                           __typename
-                        }
-                        spectrumNetworkAnalyticsAdaptiveGroups {
-                            ...AccountSettings
-                            __typename
-                        }
-                        __typename
-                    }
-                    __typename
-                }
-                __typename
-            }
-        }
-        fragment AccountSettings on Settings {
-            availableFields
-            enabled
-            maxDuration
-            maxNumberOfFields
-            maxPageSize
-            notOlderThan
-            __typename
-        }
-    """
-    variables = {
-        "accountTag": account_id,
-        "filter": {
-            "datetime_geq": "2024-12-09T22:58:00Z",
-            "datetime_leq": "2024-12-16T22:58:00Z",
-        },
-    }
-    payload = {"query": query, "variables": variables}
-    response = requests.post(url, headers=headers, json=payload)
-    if response.status_code == 200:
-        data = response.json()
-        if data.get("data"):
-            print(json.dumps(data, indent=2))
-        else:
-            print(f"Error: {data.get('errors', 'Unknown error')}")
-    else:
-        print(f"HTTP Error {response.status_code}: {response.text}")
-
-
-# get_account_settings(TOKEN, ID)
-# get_locations(TOKEN, ID, 10)
-# get_http_version_used(TOKEN, "fc17bc8e7dccdfa1c5e9fc17df9b78f5")
-##get_zones(TOKEN)
-# get_analtics("fc17bc8e7dccdfa1c5e9fc17df9b78f5", TOKEN)
-# get_accounts(TOKEN)
-# get_http_request(TOKEN, "f59279c6958c57bb391e93c8dba8965a")
+if __name__ == "__main__":
+    app.run(debug=True, port=5002)

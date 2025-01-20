@@ -1,0 +1,158 @@
+{% extends "base.html" %}
+{% block title %}admin{% endblock %}
+{% block content %}
+<h2 class="text-center mb-5">Panel administrador</h2>
+<!-- Drowpdown-->
+<div class="d-flex justify-content-start mb-4">
+    <div class="dropdown">
+        <button class="btn btn-outline-dark dropdown-toggle" type="button" id="dropdownClients" data-bs-toggle="dropdown" aria-expanded="false">
+            Cliente
+        </button>
+        <ul class="dropdown-menu" aria-labelledby="dropdownClients">
+            <li><a class="dropdown-item" href="#" data-client="todos">Todos</a></li>
+            <li><a class="dropdown-item" href="#" data-client="acme">Acme</a></li>
+            <li><a class="dropdown-item" href="#" data-client="actinver">Actinver</a></li>
+            <li><a class="dropdown-item" href="#" data-client="gentera">Gentera</a></li>
+        </ul>
+    </div>
+</div>
+<!-- Metricas-->
+<div class="row mb-4">
+    <div class="col-md-4">
+        <div class="card text-center shadow-sm">
+            <div class="card-body">
+                <h5 class="card-title text-dark">Requests totales</h5>
+                <p id="requests-total" class="fs-4 fw-bold">1234</p>
+                <img src="{{ url_for('static', filename='test_graph.png') }}" alt="grafica" width="200">
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card text-center shadow-sm">
+            <div class="card-body">
+                <h5 class="card-title text-dark">Reportes generados</h5>
+                <p id="reports-generated" class="fs-4 fw-bold">324</p>
+                <img src="{{ url_for('static', filename='test_graph.png') }}" alt="grafica" width="200">
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card text-center shadow-sm">
+            <div class="card-body">
+                <h5 class="card-title text-dark">Total de banda usado</h5>
+                <p id="total-bandwidth" class="fs-4 fw-bold">2.56gb</p>
+                 <img src="{{ url_for('static', filename='test_graph.png') }}" alt="grafica" width="200">
+            </div>
+        </div>
+    </div>
+</div>
+<!-- Tabla-->
+<div class="card shadow-sm">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <h5 class="mb-0">Reportes generados</h5>
+    </div>
+    <div class="card-body">
+        <table class="table table-stripped">
+            <thead>
+            <tr>
+                <th>Cliente</th>
+                <th>Fecha</th>
+                <th>Modo</th>
+                <th>Acciones</th>
+            </tr>
+            </thead>
+            <tbody id="table-body">
+                <tr>
+                    <td>Acme</td>
+                    <td>2/4/25</td>
+                    <td>Manual</td>
+                    <td><a href="#" class="btn btn-outline-dark btn-sm">Generar</a></td>
+                </tr>
+                <tr>
+                    <td>Actinver</td>
+                    <td>15/8/25</td>
+                    <td>Automatico</td>
+                    <td><a href="#" class="btn btn-outline-dark btn-sm">Generar</a></td>
+                </tr>
+                <tr>
+                    <td>Gentera</td>
+                    <td>19/11/25</td>
+                    <td>Manual</td>
+                    <td><a href="#" class="btn btn-outline-dark btn-sm">Generar</a></td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+<script>
+    const metricsData = {
+        todos: {
+            requestsTotal: 4567,
+            reportsGenerated: 120,
+            totalBandwidth: "10.24 GB",
+            reports: [
+                { client: "Acme", date: "2/4/25", mode: "Manual" },
+                { client: "Actinver", date: "15/8/25", mode: "Automático" },
+                { client: "Gentera", date: "19/11/25", mode: "Manual" }
+            ]
+        },
+        acme: {
+            requestsTotal: 890,
+            reportsGenerated: 34,
+            totalBandwidth: "3.25 GB",
+            reports: [
+                { client: "Acme", date: "2/4/25", mode: "Manual" },
+                { client: "Acme", date: "12/7/25", mode: "Automático" }
+            ]
+        },
+        actinver: {
+            requestsTotal: 1023,
+            reportsGenerated: 58,
+            totalBandwidth: "5.12 GB",
+            reports: [
+                { client: "Actinver", date: "15/8/25", mode: "Automático" }
+            ]
+        },
+        gentera: {
+            requestsTotal: 765,
+            reportsGenerated: 22,
+            totalBandwidth: "1.78 GB",
+            reports: [
+                { client: "Gentera", date: "19/11/25", mode: "Manual" },
+                { client: "Gentera", date: "23/11/25", mode: "Automático" }
+            ]
+        }
+    }
+    document.querySelectorAll(".dropdown-item").forEach((item) => {
+        item.addEventListener("click", (event) => {
+            const client = event.target.getAttribute("data-client")
+            const data = metricsData[client]
+            document.getElementById("dropdownClients").textContent = event.target.textContent
+            document.getElementById("requests-total").textContent = data.requestsTotal
+            document.getElementById("reports-generated").textContent = data.reportsGenerated
+            document.getElementById("total-bandwidth").textContent = data.totalBandwidth
+            const tableBody = document.getElementById("table-body")
+            tableBody.innerHTML = ""
+            data.reports.forEach((report) => {
+                const row = `
+                    <tr>
+                        <td>${report.client}</td>
+                        <td>${report.date}</td>
+                        <td>${report.mode}</td>
+                        <td><a href="#" class="btn btn-outline-dark btn-sm">Generar</a></td>
+                    </tr>
+                `
+                tableBody.insertAdjacentHTML("beforeend", row);
+            })
+        })
+    })    
+</script>
+{% endblock %}
+
+
+
+
+
+
+
+

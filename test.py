@@ -1,10 +1,13 @@
 """
 Testing
 """
-from utils.image_v2 import line_graph
-from tests.test_data import TEST_FOUR_ERRORS, TEST_BYTES  
-# line_graph(TEST_FOUR_ERRORS, "./assets/general_stats/test_graph")
-line_graph(TEST_BYTES, "./assets/general_stats/test_bytes_graph",data_type="bytes")
+from tests.test_data import TEST_REQ_COUNT
+from utils.image_v2 import graph_map
+
+# graph_line(TEST_FOUR_ERRORS, "./assets/general_stats/test_graph")
+# graph_line(TEST_BYTES, "./assets/general_stats/test_bytes_graph",data_type="bytes")
+# graph_bar(CONTENT_TYPES, "./assets/network/HTTP_client")
+graph_map(TEST_REQ_COUNT, "./assets/general_stats/map")
 
 
 

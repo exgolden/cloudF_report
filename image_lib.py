@@ -100,8 +100,7 @@ def create_table(
     requests_data: dict, bandwidth_data: dict, output_file: str, output_path: str
 ):
     """
-    Creates a table with three columns: Country, Requests, and Bandwidth.
-
+    Creates a table with three columns: Country, Requests, and Bandwidth
     Args:
         requests_data (dict): A dictionary where keys are countries and values are requests.
         bandwidth_data (dict): A dictionary where keys are countries and values are bandwidth in bytes.
@@ -270,62 +269,62 @@ def create_request_map(data: dict, output_file: str, title: str):
 
 
 # General stats
-create_request_map(
-    TEST_REQ_COUNT, "assets/general_stats/requests_map.png", "Requests por pais"
-)
-create_table(TEST_REQ_COUNT, TEST_BAND_COUNT, "table.png", "./assets/general_stats/")
-get_timeserie(
-    TEST_BYTES, "bandwidth.png", "Bandwidth", False, "./assets/general_stats/"
-)
-get_timeserie(TEST_REQ, "requests.png", "Requests", True, "./assets/general_stats/")
-get_timeserie(TEST_VIEWS, "views.png", "Views", True, "./assets/general_stats/")
-get_timeserie(TEST_VISITS, "visitas.png", "Visitas", True, "./assets/general_stats/")
-# Security
-get_timeserie(
-    TEST_ENCRYPTED_REQ,
-    "encrypted_requests.png",
-    "Requests encriptados",
-    True,
-    "./assets/security/",
-)
-get_timeserie(
-    TEST_ENCRYPTED_BAND,
-    "encrypted_bandwidth.png",
-    "Bandwidth encriptado",
-    False,
-    "./assets/security/",
-)
-# Cache
-get_timeserie(
-    TEST_CACHED_REQ,
-    "cached_requests.png",
-    "Requests cacheados",
-    True,
-    "./assets/cache/",
-)
-get_timeserie(
-    TEST_CACHED_BAND,
-    "cached_bandwidth.png",
-    "Bandwidth cacheado",
-    False,
-    "./assets/cache/",
-)
-# Errors
-get_timeserie(
-    TEST_FOUR_ERRORS,
-    "four_errors.png",
-    "Errores 4xx",
-    True,
-    "./assets/errors/",
-)
-get_timeserie(
-    TEST_FIVE_ERRORS,
-    "five_errors.png",
-    "Errores 4xx",
-    True,
-    "./assets/errors/",
-)
-# Network
-create_horizontal_bar_chart(HTML_VERSIONS, "html_versions.png", "HTML versions")
-create_horizontal_bar_chart(CONTENT_TYPES, "content_type", "Content by type")
-create_horizontal_bar_chart(SSL_TRAFFIC, "ssl_content", "SSL Content")
+# # create_request_map(
+#     TEST_REQ_COUNT, "assets/general_stats/requests_map.png", "Requests por pais"
+# )
+# create_table(TEST_REQ_COUNT, TEST_BAND_COUNT, "table.png", "./assets/general_stats/")
+# get_timeserie(
+#     TEST_BYTES, "bandwidth.png", "Bandwidth", False, "./assets/general_stats/"
+# )
+# get_timeserie(TEST_REQ, "requests.png", "Requests", True, "./assets/general_stats/")
+# get_timeserie(TEST_VIEWS, "views.png", "Views", True, "./assets/general_stats/")
+# get_timeserie(TEST_VISITS, "visitas.png", "Visitas", True, "./assets/general_stats/")
+# # Security
+# get_timeserie(
+#     TEST_ENCRYPTED_REQ,
+#     "encrypted_requests.png",
+#     "Requests encriptados",
+#     True,
+#     "./assets/security/",
+# )
+# get_timeserie(
+#     TEST_ENCRYPTED_BAND,
+#     "encrypted_bandwidth.png",
+#     "Bandwidth encriptado",
+#     False,
+#     "./assets/security/",
+# )
+# # Cache
+# get_timeserie(
+#     TEST_CACHED_REQ,
+#     "cached_requests.png",
+#     "Requests cacheados",
+#     True,
+#     "./assets/cache/",
+# )
+# get_timeserie(
+#     TEST_CACHED_BAND,
+#     "cached_bandwidth.png",
+#     "Bandwidth cacheado",
+#     False,
+#     "./assets/cache/",
+# )
+# # Errors
+# get_timeserie(
+#     TEST_FOUR_ERRORS,
+#     "four_errors.png",
+#     "Errores 4xx",
+#     True,
+#     "./assets/errors/",
+# )
+# get_timeserie(
+#     TEST_FIVE_ERRORS,
+#     "five_errors.png",
+#     "Errores 4xx",
+#     True,
+#     "./assets/errors/",
+# )
+# # Network
+# create_horizontal_bar_chart(HTML_VERSIONS, "html_versions.png", "HTML versions")
+# create_horizontal_bar_chart(CONTENT_TYPES, "content_type", "Content by type")
+# create_horizontal_bar_chart(SSL_TRAFFIC, "ssl_content", "SSL Content")

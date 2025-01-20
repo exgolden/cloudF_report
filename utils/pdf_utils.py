@@ -1,6 +1,8 @@
 """
-Library to create the report
+V3 functions neccesary to run the pdf creation
 """
+
+__version__ = "3.0.0"
 
 from datetime import datetime
 
@@ -24,7 +26,8 @@ def create_pdf_report(client_name: str, client_image_path: str):
     # Set title and date
     today_date = datetime.today().strftime("%Y-%m-%d")
     pdf.set_font("Arial", size=16, style="B")
-    pdf.cell(0, 10, txt=f"Reporte de red: {client_name}", ln=True, align="C")
+    # pdf.cell(0, 10, txt=f"Reporte de red: {client_name}", ln=True, align="C")
+    pdf.cell(0, 10, txt="Reporte de red: CLIENTE", ln=True, align="C")
     pdf.set_font("Arial", size=12)
     pdf.cell(0, 10, txt=f"Fecha: {today_date}", ln=True, align="C")
     pdf.ln(10)  # Add space after the title
@@ -87,7 +90,8 @@ def create_pdf_report(client_name: str, client_image_path: str):
     pdf.image("assets/errors/five_errors.png", x=110, y=270, w=90)
 
     # Save the PDF
-    file_name = f"{client_name}_report_{today_date}.pdf".replace(" ", "_")
+    # file_name = f"{client_name}_report_{today_date}.pdf".replace(" ", "_")
+    file_name = "assets/report.pdf"
     pdf.output(file_name)
     print(f"PDF report saved as {file_name}")
 

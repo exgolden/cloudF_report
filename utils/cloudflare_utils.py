@@ -1,7 +1,7 @@
 """
  V2 functions neccesary to run the Cloudflare API
 """
-
+__version__ = "2.0.0"
 import os
 from datetime import datetime, timedelta
 import requests
@@ -846,6 +846,146 @@ def get_fivexx_errors(zone_tag: str, leq_date: str, periods: int) -> dict:
         return results
     except (KeyError, IndexError) as e:
         raise Exception(f"Error processing response for 5xx errors: {e}")
+
+#TODO Refactor these three functionsdef get_accounts(token: str):
+    """
+    Get basic data on accounts
+    """
+    url = "https://api.cloudflare.com/client/v4/accounts"
+    headers = {"Authorization": f"Bearer {token}", "Content-Type": "application/json"}
+    response = requests.get(url, headers=headers)
+    if response.status_code == 200:
+        data = response.json()
+        if data["success"]:
+            print("Accounts: ")
+            for account in data["result"]:
+                print(f"Name: {account['name']}, ID: {account['id']}")
+        else:
+            print(f"API Error: {data['errors']}")
+    else:
+        print(f"HTTP Error: {response.status_code} - {response.text}")
+
+
+        print(f"HTTP Error {response.status_code}: {response.text}")
+
+def get_zones(token: str):
+    """
+    Get the zones and their id's
+    """
+    url = "https://api.cloudflare.com/client/v4/zones"
+    headers = {"Authorization": f"Bearer {token}", "Content-Type": "application/json"}
+    response = requests.get(url, headers=headers)
+    if response.status_code == 200:
+        data = response.json()
+        if data.get("success"):
+            print("Zones:")
+            for zone in data.get("result", []):
+                print(f"- Name: {zone['name']}, ID: {zone['id']}")
+        else:
+            print(f"API Error: {data.get('errors')}")
+    else:
+        print(f"HTTP Error {response.status_code}: {response.text}")
+
+def get_account_settings(token: str, account_id: str):
+    """
+    Get basic stats from the acocunt
+    """
+    # TODO: Add dates as variables
+    url = "https://api.cloudflare.com/client/v4/graphql"
+    headers = {
+        "Authorization": f"Bearer {token}",
+        "Content-Type": "application/json",
+        "Accept": "application/json",
+    }
+    query = """
+        query GetAccountSettings($accountTag: string) {
+            viewer {
+                accounts(filter: {accountTag: $accountTag}) {
+                    settings {
+                        httpRequestsOverviewAdaptiveGroups {
+                            ...AccountSettings
+                            __typename
+                        }
+                        httpRequestsAdaptiveGroups {
+                            ...AccountSettings
+                            __typename
+                        }
+                        advancedDnsProtectionNetworkAnalyticsAdaptiveGroups {
+                            ...AccountSettings
+                            __typename
+                        }
+                        dosdNetworkAnalyticsAdaptiveGroups {
+                            ...AccountSettings
+                            __typename
+                        }
+                        dosdAttackAnalyticsGroups {
+                            ...AccountSettings
+                            __typename
+                        }
+                        firewallEventsAdaptive {
+                            ...AccountSettings
+                            __typename
+                        }
+                        firewallEventsAdaptiveGroups {
+                            ...AccountSettings
+                            __typename
+                        }
+                        flowtrackdNetworkAnalyticsAdaptiveGroups {
+                            ...AccountSettings
+                            __typename
+                        }
+                        magicTransitNetworkAnalyticsAdaptiveGroups {
+                            ...AccountSettings
+                            __typename
+                        }
+                        magicTransitTunnelTrafficAdaptiveGroups {
+                            ...AccountSettings
+                            __typename
+                        }
+                        magicFirewallNetworkAnalyticsAdaptiveGroups {
+                           ...AccountSettings
+                           __typename
+                        }
+                        spectrumNetworkAnalyticsAdaptiveGroups {
+                            ...AccountSettings
+                            __typename
+                        }
+                        __typename
+                    }
+                    __typename
+                }
+                __typename
+            }
+        }
+        fragment AccountSettings on Settings {
+            availableFields
+            enabled
+            maxDuration
+            maxNumberOfFields
+            maxPageSize
+            notOlderThan
+            __typename
+        }
+    """
+    variables = {
+        "accountTag": account_id,
+        "filter": {
+            "datetime_geq": "2024-12-09T22:58:00Z",
+            "datetime_leq": "2024-12-16T22:58:00Z",
+        },
+    }
+    payload = {"query": query, "variables": variables}
+    response = requests.post(url, headers=headers, json=payload)
+    if response.status_code == 200:
+        data = response.json()
+        if data.get("data"):
+            print(json.dumps(data, indent=2))
+        else:
+            print(f"Error: {data.get('errors', 'Unknown error')}")
+    else:
+        print(f"HTTP Error {response.status_code}: {response.text}")
+
+
 
 # General module
 # print(range_generator("2024-12-16", 7))
