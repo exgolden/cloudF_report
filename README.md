@@ -1,17 +1,51 @@
-# cloudF_report
+# Cloudflare Report Application
 
-Obtain a report with general analytics of CloudFlare
+The Cloudflare Reports Application automates the generation of detailed reports
+based on Cloudflare analytics.
+It provides metrics on network performance, security, caching efficiency, and error tracking.
+Presented in an easy-to-understand format.
+Below is an overview of the custom-made libraries that uses:
+
+- **cloudflare_utils**: Retrieves raw data from the GraphQL API
+  *Currently it does not filter by zone*
+- **image_utils**: Creates the graphs used in the final report
+  *not the final desing yet*
+- **pdf_utils**: Creates the pdf report.
+  *not the final design yet, will work on custom design for each client*
+
+## Architecture
+
+The app uses Flask for the backend, with no data persitance *for the moment* and BS for the front.
+The main idea behind the app is to query network data from cloudflare and present it to the client
+along some useful recommendations, this will be done through email reports and live dashboards.
+One current limitation in the free plan is that we can only query data from the last 7 days, so to
+bypass that the app does snapshots every day for every client and saves it to a DB, the window data
+for each client will depend on its plan, currently the maximum window we offer is 30d.
+
+### DB Design
+Currently we have 13 metrics *were missing more* lets say we start with 10 clients,
+per Arturo: 80% of them will use the basic plan *7 days* that gives us 1000 rows per week
+-that will die each week- and 800
+
+## Milestones
+
+- SMTP functionalities.
+- DB for 30-day data storage.
+- Live graphs, Grafana?
+- Cron job querying.
 
 ## Issues
 
-- Sometimes the API returns totals for everyday in the period and sometimes it
-  returns data for the whole period, for example get_requests &
-  get_requests_per_location gives me data for the whole period, not for teach day
-  iin the period. Maybe I can set a parameter in the function, initially it will
-  return data for each day, if this patameter is acticates, then it will return
-  the totals. I can also forget about request for everyday if only a per weekend
-  or month analysis is required.
-- Normalize documentation.
+- cloudflare_utilities retrieves data for the whole account.
+  You cant retrieve dara for a single zone directly, first you need to query data for the whole org
+  and then filter it by zone, so my idea is to set a filter variable and perform querys for every single client,
+  the problem is that it would take a lot of request. Maybe theres a way to retrieve all the data
+  separated by zone. Requires further investigation.
+- cloudflare_utilities is still missing security threats, performance and firewall metrics.
+- No metadata db.
+- No testing.
+- Noting is integrated, everything is manually done.
+- New metrics missing
 
 ## API Functionalities:
 
@@ -83,7 +117,3 @@ Obtain a report with general analytics of CloudFlare
         Errors:
             - 4xx errors percentage
             - 5xx errors percentage
-
-## Testing
-
-1. Add a test to check the error type in get_error_totals
